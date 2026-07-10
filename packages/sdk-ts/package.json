@@ -1,0 +1,17 @@
+{
+  "name": "@agentshare/sdk",
+  "version": "1.0.0",
+  "description": "The official TypeScript SDK for AgentShare.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["agentshare", "ai", "memory"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

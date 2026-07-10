@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentshare-langchain"
+version = "1.0.0"
+authors = [
+  { name="AgentShare Team" }
+]
+description = "LangChain tools for AgentShare"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "requests",
+    "langchain-core",
+    "pydantic"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/agentshare/agentshare"
