@@ -8,7 +8,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@agentshare/sdk": "workspace:*",
+    "@agentshare/sdk": "file:../sdk-ts",
     "ai": "^3.1.0",
     "zod": "^3.23.0"
   },
