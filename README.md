@@ -20,6 +20,17 @@ Upload an asset. Mint a scoped token. Pass it to any LLM.
 
 AgentShare is an infrastructure primitive for AI agent workflows. Instead of stuffing large files into prompt context windows (expensive, slow, insecure), agents upload files to AgentShare and receive a short, scoped, expiring pathway token.
 
+**What is currently shipped:**
+- Secure file/artifact sharing
+- Pathway tokens for concise reference
+- Presigned uploads and resolves (server acts as an opaque pipe)
+- Audit logging of all access
+- Real auth and rate limiting
+
+**What it does NOT do (by design):**
+- Inspect or mutate file payloads server-side
+- Attempt "live execution state" capture or cross-model state translation (this is future R&D)
+
 ```
 upload -> token -> resolve -> stream -> audit -> share
 ```
@@ -33,7 +44,6 @@ Any agent, human, or service with the token can resolve it to a secure, streamin
 | Paste 2MB JSON into prompt → $1.20/request, 15s latency | Upload once, pass `agnt.sr/x97b` → $0.001, 200ms |
 | No audit trail for file access | Every resolve is logged with IP, user-agent, timestamp |
 | Files die with the conversation | Tokens persist, expire on schedule, and are revocable |
-| Agents can't share outputs across sessions | Any agent with the token resolves the file instantly |
 
 ## Quickstart
 
@@ -155,7 +165,7 @@ Response: `{ "filename": "data.json", "streamUrl": "https://...", "contentType":
 AgentShare runs locally with Postgres and MinIO. No cloud accounts required.
 
 ```bash
-git clone https://github.com/agentshare/agentshare.git
+git clone https://github.com/techbitaibytes-bit/agentshare.git
 cd agentshare
 npm install
 cp .env.example .env.local
@@ -165,20 +175,12 @@ npm run dev
 
 > **Production migration:** The codebase uses thin adapters for database, storage, and auth. Switch to Neon + S3 + Clerk by updating environment variables only.
 
-## Architecture
+## Roadmap: MCP Server Integration
 
-```
-┌──────────┐     ┌──────────────┐     ┌───────────┐
-│  Client   │────▶│  Next.js API  │────▶│  Postgres  │
-│  (SDK)    │     │  Routes       │     │  (schema)  │
-└──────────┘     └──────┬───────┘     └───────────┘
-                        │
-                        ▼
-                 ┌──────────────┐
-                 │  S3/MinIO     │
-                 │  (storage)    │
-                 └──────────────┘
-```
+The next major feature planned for AgentShare is a **Model Context Protocol (MCP)** server layer. Once the July 28, 2026 stateless MCP core spec is finalized, we intend to:
+- Expose `agentshare_share` and `agentshare_resolve` as MCP tools.
+- Introduce an `agentshare://token/{id}` resource URI pattern.
+*Note: This is an upcoming feature, not currently implemented in the main branch.*
 
 ## License
 
