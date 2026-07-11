@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@agentshare/sdk": "file:../sdk-ts",
-    "ai": "^3.1.0",
+    "ai": "^6.0.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {

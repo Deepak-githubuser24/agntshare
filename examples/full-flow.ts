@@ -10,8 +10,10 @@ import { AgentShare } from "../packages/sdk-ts/src";
 
 async function main() {
   const client = new AgentShare({
-    apiKey: "demo-user",
-    baseUrl: "http://localhost:3000/api",
+    apiKey: process.env.AGENTSHARE_API_KEY ?? "as_e2etestkey_for_local_development_only_do_not_use_in_prod",
+    baseUrl: process.env.AGENTSHARE_BASE_URL
+      ? `${process.env.AGENTSHARE_BASE_URL}/api`
+      : "http://localhost:3000/api",
   });
 
   // ── Step 1: Upload ─────────────────────────────────────

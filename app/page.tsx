@@ -196,6 +196,18 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Footer / Legal Disclosure */}
+      <footer className="border-t border-[#2A323C] bg-[#0B0F13] py-8 text-center text-sm text-[#5C6675]">
+        <div className="mx-auto max-w-4xl px-4">
+          <p>
+            AgentShare is currently in closed beta. We collect your email for login and store uploaded files securely in your configured object storage. Tokens and files are retained according to your configured expiration.
+          </p>
+          <p className="mt-2">
+            A full Terms of Service and Privacy Policy will be published prior to public launch.
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }

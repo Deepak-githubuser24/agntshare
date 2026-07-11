@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { query } from "@/lib/db/client";
 import { getUploadUrl } from "@/lib/storage/s3";
+import { auth } from "@/auth";
+import { verifyApiKey } from "@/lib/auth/api-keys";
+import {
+  checkRateLimit,
+  rateLimitKey,
+  API_RATE_LIMIT,
+} from "@/lib/rate-limit";
 
 const MAX_SIZE_BYTES = 500 * 1024 * 1024; // 500MB — tune as needed
 
@@ -11,27 +18,44 @@ const RequestSchema = z.object({
   sizeBytes: z.number().int().positive().max(MAX_SIZE_BYTES),
 });
 
-import { auth } from "@/auth";
-
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  let userId = session?.user?.id;
-  const authHeader = req.headers.get("Authorization");
+  // --- Authenticate ---
+  let userId: string | undefined;
 
-  if (!userId && authHeader?.startsWith("Bearer ")) {
-    const key = authHeader.replace("Bearer ", "");
-    let users = await query<{ id: string }>("SELECT id FROM users WHERE email = $1", [`api-${key}@example.com`]);
-    if (users.length === 0) {
-      await query("INSERT INTO users (email, auth_provider) VALUES ($1, $2)", [`api-${key}@example.com`, "api_key"]);
-      users = await query<{ id: string }>("SELECT id FROM users WHERE email = $1", [`api-${key}@example.com`]);
+  // 1. Try session auth (browser / cookie-based)
+  const session = await auth();
+  userId = session?.user?.id;
+
+  // 2. Try API key auth (Bearer token)
+  if (!userId) {
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const rawKey = authHeader.slice(7);
+      const keyUserId = await verifyApiKey(rawKey);
+      if (keyUserId) {
+        userId = keyUserId;
+      }
     }
-    userId = users[0].id;
   }
 
   if (!userId) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
+  // --- Rate limit ---
+  const rlKey = rateLimitKey(req, userId);
+  const rl = checkRateLimit(rlKey, API_RATE_LIMIT);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "rate_limit_exceeded", retryAfter: Math.ceil((rl.resetAt - Date.now()) / 1000) },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) },
+      }
+    );
+  }
+
+  // --- Validate body ---
   const body = await req.json().catch(() => null);
   const parsed = RequestSchema.safeParse(body);
   if (!parsed.success) {

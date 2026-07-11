@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 
-export const { auth: middleware } = NextAuth(authConfig);
+export const proxy = NextAuth(authConfig).auth;
 
 export const config = {
   // matcher for protected routes
