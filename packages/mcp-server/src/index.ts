@@ -65,7 +65,6 @@ async function apiRequest<T>(
 ): Promise<T> {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${config.apiKey}`,
-    "x-user-id": config.apiKey,
   };
 
   if (config.agentId) headers["x-agent-id"] = config.agentId;

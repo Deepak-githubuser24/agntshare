@@ -74,7 +74,7 @@ export async function GET(
   const streamUrl = await getDownloadUrl(asset.storage_key);
   let uploadUrl: string | undefined;
 
-  if (intent === "write" || pathwayToken.scope === "read_write" || pathwayToken.scope === "admin") {
+  if (intent === "write") {
     uploadUrl = await getUploadUrl(asset.storage_key, asset.content_type ?? "application/octet-stream");
   }
 

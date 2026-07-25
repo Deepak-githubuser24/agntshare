@@ -22,7 +22,6 @@ class AgentShare {
         }
         if (this.apiKey) {
             headers.set("Authorization", `Bearer ${this.apiKey}`);
-            headers.set("x-user-id", this.apiKey);
         }
         if (this.agentId)
             headers.set("x-agent-id", this.agentId);

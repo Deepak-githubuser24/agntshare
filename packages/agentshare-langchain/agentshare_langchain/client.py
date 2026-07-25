@@ -14,7 +14,6 @@ class AgentShareClient:
         headers = {}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-            headers["x-user-id"] = self.api_key
         return headers
 
     def upload(self, filename: str, content_type: str, size_bytes: int) -> Dict[str, Any]:

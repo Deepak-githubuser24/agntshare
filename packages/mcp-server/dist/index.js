@@ -37,7 +37,6 @@ function loadConfig() {
 async function apiRequest(config, method, path, body) {
     const headers = {
         Authorization: `Bearer ${config.apiKey}`,
-        "x-user-id": config.apiKey,
     };
     if (config.agentId)
         headers["x-agent-id"] = config.agentId;
