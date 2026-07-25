@@ -1,29 +1,29 @@
 import Link from "next/link";
 
 const STEPS = [
-  { name: "upload", desc: "Agent sends a file" },
-  { name: "token", desc: "Short scoped URL minted" },
-  { name: "resolve", desc: "Token mapped to asset" },
-  { name: "stream", desc: "Byte-range streaming" },
-  { name: "audit", desc: "Every access logged" },
-  { name: "share", desc: "Pass the token forward" },
+  { name: "upload", desc: "Share file or structured state" },
+  { name: "token", desc: "Short scoped pathway token minted" },
+  { name: "resolve", desc: "Token resolved with optional selective keys/path" },
+  { name: "stream", desc: "Presigned URL or JSON payload slice" },
+  { name: "audit", desc: "Agent ID, session, & action logged" },
+  { name: "revoke", desc: "Instant revocation for cleanup" },
 ] as const;
 
 const QUICK_NAV = [
   {
     href: "/docs/quickstart",
     title: "Quickstart",
-    desc: "Upload a file and mint a share token in under 10 lines.",
+    desc: "Share state, slice context, or connect MCP tools in 3 lines.",
   },
   {
     href: "/docs/api-reference",
     title: "API Reference",
-    desc: "POST /api/upload, POST /api/token, GET /api/resolve/[token].",
+    desc: "POST /api/upload, POST /api/token, GET /api/resolve/[token], DELETE /api/token/[token].",
   },
   {
     href: "/docs/integrations",
-    title: "Integrations",
-    desc: "Vercel AI SDK and LangChain drop-in tools.",
+    title: "Integrations & MCP",
+    desc: "Claude Desktop, Cursor MCP server, Vercel AI SDK, and LangChain.",
   },
 ] as const;
 
@@ -36,10 +36,20 @@ export default function DocsHome() {
       </h1>
 
       <p className="mt-4 text-[#9AA4B2]">
-        AgentShare is infrastructure that turns any file into a short, scoped,
-        expiring token — so one agent&apos;s output becomes another
-        agent&apos;s input, without a shared filesystem or bloated prompts.
+        AgentShare is a developer-first protocol and runtime layer that turns files, working memory,
+        and project state into short, scoped, expiring pathway tokens — so one agent&apos;s output
+        becomes another agent&apos;s input without bloated context windows or shared filesystems.
       </p>
+
+      {/* Stage Badge */}
+      <div className="mt-6 flex items-center gap-3">
+        <span className="inline-flex items-center rounded-full border border-[#5EEAD4]/30 bg-[#5EEAD4]/10 px-3 py-1 font-mono text-xs font-medium text-[#5EEAD4]">
+          Stage 1 Closed Beta
+        </span>
+        <span className="text-xs text-[#5C6675]">
+          Files + Memory/State + Selective Retrieval + Native MCP Server
+        </span>
+      </div>
 
       {/* The primitive */}
       <div className="mt-10">

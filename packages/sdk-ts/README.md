@@ -1,61 +1,86 @@
-# @agentshare/sdk
+# `@agentshare/sdk`
 
-The official TypeScript SDK for AgentShare.
+**Official TypeScript SDK for AgentShare — secure file, memory, and project state sharing for AI agents.**
 
-AgentShare is the invariant primitive for agentic memory. Upload an asset, mint a scoped token, and pass it to any LLM.
+[![npm](https://img.shields.io/badge/npm-v1.0.0-blue?style=flat-square)](https://www.npmjs.com/package/@agentshare/sdk)
+[![Stage: Closed Beta](https://img.shields.io/badge/Stage-Stage_1_Closed_Beta-5EEAD4?style=flat-square)](../../README.md)
 
-## Quickstart
+---
 
-### Installation
+## Installation
 
 ```bash
 npm install @agentshare/sdk
 ```
 
-### 1. Initialize
+---
+
+## Quickstart
+
+### 1. Initialize Client
 
 ```typescript
 import { AgentShare } from "@agentshare/sdk";
 
 const client = new AgentShare({
-  apiKey: "your-api-key", // Or set AGENTSHARE_API_KEY env var
-  baseUrl: "http://localhost:3000/api", // Optional
+  apiKey: process.env.AGENTSHARE_API_KEY || "as_e2etestkey_for_local_development_only_do_not_use_in_prod",
+  baseUrl: "http://127.0.0.1:3000/api",
+  agentId: "agent-planner-v1",
+  sessionId: "session-404",
+  agentRole: "architect",
 });
 ```
 
-### 2. Upload & Mint a Token
+### 2. Share Structured Memory & Project State
 
 ```typescript
-import fs from "fs";
-
-// Step 1: Initialize the upload
-const { uploadUrl, assetId } = await client.upload({
-  filename: "context.json",
-  contentType: "application/json",
-  sizeBytes: fs.statSync("context.json").size,
+const { token, shareUrl, checksumSha256 } = await client.shareState({
+  state: {
+    summary: "Refactored user billing pipeline to async queue",
+    decisions: ["Decouple Stripe webhook processing from HTTP request cycle"],
+    memory: { dbEngine: "PostgreSQL 16", cacheEngine: "Redis 7.2" },
+  },
+  filename: "billing-state.json",
+  scope: "read",
+  ttlSeconds: 3600,
 });
 
-// Step 2: Upload the file directly to storage (bypassing our API)
-await fetch(uploadUrl, {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: fs.readFileSync("context.json"),
-});
-
-// Step 3: Mint a short token for your agent
-const { token, shareUrl } = await client.mintToken({ assetId });
-
-console.log(`Agent can access the file at: ${shareUrl}`);
-// Output: agnt.sr/x97b
+console.log(`Pathway Token: ${token}`);
+// Output: Pathway Token: l0VzcLlj
 ```
 
-### 3. Resolve a Token (Agent Side)
+### 3. Selective Retrieval (Receiving Agent)
+
+Save prompt tokens by requesting only the exact fields your receiving agent needs:
 
 ```typescript
-// The agent receives the short token and resolves it to a streamable URL
-const { streamUrl, filename } = await client.resolve("x97b");
+// Filter top-level keys
+const { state } = await client.resolveState("l0VzcLlj", {
+  keys: ["summary", "decisions"],
+});
+console.log(state.summary);
 
-// The agent streams the file directly from storage
-const res = await fetch(streamUrl);
-const data = await res.json();
+// Extract dot-notation sub-tree path
+const pathRes = await client.resolveState("l0VzcLlj", {
+  path: "memory.dbEngine",
+});
+console.log(pathRes.state); // "PostgreSQL 16"
 ```
+
+### 4. Revoke Token (Cleanup)
+
+```typescript
+await client.revokeToken("l0VzcLlj");
+```
+
+---
+
+## API Methods
+
+* `shareState(options)`: Share structured JSON state, calculate SHA-256 checksum, upload to storage, and mint token.
+* `resolveState(token, options)`: Resolve state token with optional `keys` array filtering or dot-notation `path` extraction.
+* `upload(options)`: Initialize direct file upload and receive presigned URL.
+* `mintToken(options)`: Mint scoped pathway token for an uploaded asset ID.
+* `resolve(token, options)`: Resolve token into presigned download URL and metadata.
+* `revokeToken(token)`: Instantly revoke a pathway token.
+* `AgentShare.selectFromJSON(data, keys, path)`: Client-side JSON slicing utility.

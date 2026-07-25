@@ -1,0 +1,4 @@
+{
+  "summary": "Refactored user billing pipeline to async queue",
+  "db": "PostgreSQL 16"
+}

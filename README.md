@@ -1,218 +1,178 @@
-<div align="center">
+# AgentShare (`agntshare`)
 
-# agentshare
+**AgentShare lets AI agents securely share files, memory, and project state through short-lived, scoped, audited pathway tokens.**
 
-**Secure streaming memory for AI agents.**
-
-[![npm](https://img.shields.io/npm/v/@agentshare/sdk?color=%235EEAD4&label=%40agentshare%2Fsdk)](https://www.npmjs.com/package/@agentshare/sdk)
-[![PyPI](https://img.shields.io/pypi/v/agentshare-langchain?color=%235EEAD4)](https://pypi.org/project/agentshare-langchain/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
-Upload an asset. Mint a scoped token. Pass it to any LLM.
-
-[Quickstart](#quickstart) · [Docs](/docs) · [API Reference](#api-reference) · [Integrations](#integrations)
-
-</div>
+[![Stage: Closed Beta](https://img.shields.io/badge/Stage-Stage_1_Closed_Beta-5EEAD4?style=flat-square)](app/docs/page.tsx)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![MCP Native](https://img.shields.io/badge/MCP-Native_Tools-purple?style=flat-square)](packages/mcp-server)
 
 ---
 
-## What is AgentShare?
+## What Problem Does AgentShare Solve?
 
-AgentShare is an infrastructure primitive for AI agent workflows. Instead of stuffing large files into prompt context windows (expensive, slow, insecure), agents upload files to AgentShare and receive a short, scoped, expiring pathway token.
+When AI agents pass large files, working memory, or project state to each other, developers currently face three bad choices:
+1. **Stuffing raw payloads into prompt context windows:** Expensive ($1.00+ per request), slow (adds 10-15s latency), and hits context limits.
+2. **Writing ad-hoc shared filesystem glue:** Complex to maintain, leaks file paths, and works only when agents share a single local machine.
+3. **Passing un-audited S3 links:** No scope enforcement, no access logging, and no automatic TTL expiration.
 
-**What is currently shipped:**
-- Secure file/artifact sharing
-- Pathway tokens for concise reference
-- Presigned uploads and resolves (server acts as an opaque pipe)
-- Audit logging of all access
-- Real auth and rate limiting
+**AgentShare is an infrastructure primitive and runtime layer designed for agent-to-agent handoffs.** Agents upload context once, receive a short opaque pathway token (e.g. `l0VzcLlj`), and pass only the token. The receiving agent selectively retrieves only the fields it needs, verified by SHA-256 checksums and logged to an audit trail.
 
-**What it does NOT do (by design):**
-- Inspect or mutate file payloads server-side
-- Attempt "live execution state" capture or cross-model state translation (this is future R&D)
+---
 
-```
-upload -> token -> resolve -> stream -> audit -> share
-```
+## What Works Today (Stage 1 Closed Beta)
 
-Any agent, human, or service with the token can resolve it to a secure, streaming download. Every access is audited.
+AgentShare is currently a **functional, verified foundation (Stage 1 Closed Beta)**:
 
-## Why?
+* ✅ **Structured Memory & State Sharing:** `shareState()` and `resolveState()` serialize JSON snapshots, calculate SHA-256 checksums, and manage storage.
+* ✅ **Selective Retrieval (`keys` & `path`):** Receiving agents can request specific top-level JSON keys (`keys: ["summary"]`) or extract sub-tree paths (`path: "memory.dbEngine"`), saving prompt tokens.
+* ✅ **Native MCP Server (`@agentshare/mcp-server`):** Built on `@modelcontextprotocol/sdk` v1.29.0 exposing `agentshare_share`, `agentshare_resolve`, and `agentshare_revoke` tools + `agentshare://token/{id}` resource URI.
+* ✅ **File & Large Binary Sharing:** Opaque S3/R2 presigned streaming URLs. The server acts as a dumb, un-inspecting pipe.
+* ✅ **Zero-Dependency Dev Storage:** Includes built-in `/api/dev-storage` for local S3-free testing out of the box.
+* ✅ **Security & Audit Logging:** API key authentication (SHA-256 hashed), scoped tokens (`read`, `read_write`, `admin`), instant token revocation, and PostgreSQL audit logging (`agent_id`, `session_id`, `agent_role`).
 
-| Without AgentShare | With AgentShare |
-|---|---|
-| Paste 2MB JSON into prompt → $1.20/request, 15s latency | Upload once, pass `agnt.sr/x97b` → $0.001, 200ms |
-| No audit trail for file access | Every resolve is logged with IP, user-agent, timestamp |
-| Files die with the conversation | Tokens persist, expire on schedule, and are revocable |
+> **Honest Disclosure — What is NOT built yet:** AgentShare does *not* currently inspect file bytes server-side or attempt live process execution state restoration ("memory resume"). Cross-model state translation remains long-term R&D.
+
+---
 
 ## Quickstart
 
-### TypeScript SDK
+### 1. TypeScript SDK (`@agentshare/sdk`)
 
+#### Install:
 ```bash
 npm install @agentshare/sdk
 ```
 
+#### Share & Selectively Retrieve Structured State:
 ```typescript
-import fs from "fs";
 import { AgentShare } from "@agentshare/sdk";
 
-const client = new AgentShare({ apiKey: process.env.AGENTSHARE_API_KEY });
-
-// 1. Upload
-const { uploadUrl, assetId } = await client.upload({
-  filename: "output.json",
-  contentType: "application/json",
-  sizeBytes: fs.statSync("output.json").size,
+const client = new AgentShare({
+  apiKey: process.env.AGENTSHARE_API_KEY || "as_e2etestkey_for_local_development_only_do_not_use_in_prod",
+  baseUrl: "http://127.0.0.1:3000/api",
+  agentId: "planner-agent-01",
 });
-await fetch(uploadUrl, { method: "PUT", body: fs.readFileSync("output.json") });
 
-// 2. Mint token
-const { shareUrl } = await client.mintToken({ assetId });
-console.log(shareUrl); // agnt.sr/x97b
-
-// 3. Resolve (from any other agent or service)
-const { streamUrl } = await client.resolve("x97b");
-const data = await fetch(streamUrl).then(r => r.json());
-```
-
-### Vercel AI SDK
-
-```bash
-npm install @agentshare/vercel-ai @agentshare/sdk ai
-```
-
-```typescript
-import { generateText } from "ai";
-import { openai } from "@ai-sdk/openai";
-import { AgentShare } from "@agentshare/sdk";
-import { createAgentShareTool } from "@agentshare/vercel-ai";
-
-const client = new AgentShare({ apiKey: process.env.AGENTSHARE_API_KEY });
-
-const { text } = await generateText({
-  model: openai("gpt-4o"),
-  prompt: "Analyze this dataset and save the report.",
-  tools: { agentShare: createAgentShareTool(client) },
+// 1. Agent A shares structured state snapshot
+const { token, shareUrl, checksumSha256 } = await client.shareState({
+  state: {
+    summary: "Refactored user billing pipeline to async queue",
+    decisions: ["Decouple Stripe webhook processing"],
+    memory: { dbEngine: "PostgreSQL 16", cache: "Redis 7" },
+  },
+  scope: "read",
+  ttlSeconds: 3600,
 });
-// Agent uploads the report and returns: "Report saved at agnt.sr/r82q"
+console.log(`Pathway Token: ${token} | Share URL: ${shareUrl}`);
+
+// 2. Agent B selectively retrieves ONLY the fields it needs (skipping 'memory' to save tokens)
+const { state } = await client.resolveState(token, {
+  keys: ["summary", "decisions"],
+});
+console.log("Selective Summary:", state.summary);
+
+// 3. Agent C revokes access when handoff completes
+await client.revokeToken(token);
 ```
 
-### LangChain (Python)
+---
 
-```bash
-pip install agentshare-langchain
-```
+### 2. MCP Integration (Claude Desktop & Cursor)
 
-```python
-from agentshare_langchain import AgentShareClient, create_agentshare_tools
+AgentShare runs natively as an MCP server. Any MCP-compatible agent can share, selectively retrieve, and revoke pathway tokens without custom code.
 
-client = AgentShareClient(api_key="your-key")
-tools = create_agentshare_tools(client)
-
-# Pass tools to any LangChain agent
-agent_executor = AgentExecutor(agent=agent, tools=tools)
-```
-
-## API Reference
-
-### `POST /api/upload`
-
-Initialize an upload and receive a presigned storage URL.
-
-```bash
-curl -X POST http://localhost:3000/api/upload \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_KEY" \
-  -d '{"filename":"data.json","contentType":"application/json","sizeBytes":1024}'
-```
-
-Response: `{ "assetId": "uuid", "uploadUrl": "https://..." }`
-
-### `POST /api/token`
-
-Mint a scoped, expiring pathway token for an uploaded asset.
-
-```bash
-curl -X POST http://localhost:3000/api/token \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_KEY" \
-  -d '{"assetId":"uuid","scope":"read","ttlSeconds":86400}'
-```
-
-Response: `{ "token": "x97b", "shareUrl": "agnt.sr/x97b", "expiresAt": "..." }`
-
-### `GET /api/resolve/:token`
-
-Resolve a pathway token into a secure, presigned stream URL.
-
-```bash
-curl http://localhost:3000/api/resolve/x97b
-```
-
-Response: `{ "filename": "data.json", "streamUrl": "https://...", "contentType": "application/json" }`
-
-## Integrations
-
-| Package | Runtime | Install |
-|---|---|---|
-| [`@agentshare/sdk`](packages/sdk-ts) | Node.js / Edge | `npm i @agentshare/sdk` |
-| [`@agentshare/vercel-ai`](packages/vercel-ai) | Node.js / Edge | `npm i @agentshare/vercel-ai` |
-| [`@agentshare/mcp-server`](packages/mcp-server) | Node.js (stdio) | `npm i @agentshare/mcp-server` |
-| [`agentshare-langchain`](packages/agentshare-langchain) | Python 3.9+ | `pip install agentshare-langchain` |
-
-## MCP Integration
-
-AgentShare ships a native [Model Context Protocol](https://modelcontextprotocol.io/) server. Any MCP-compatible agent (Claude, Cursor, VS Code, etc.) can share, resolve, and revoke pathway tokens with zero custom code.
+#### Add to Cursor (`.cursor/mcp.json`) or Claude Desktop (`claude_desktop_config.json`):
 
 ```json
-// claude_desktop_config.json
 {
   "mcpServers": {
     "agentshare": {
-      "command": "npx",
-      "args": ["tsx", "packages/mcp-server/src/index.ts"],
+      "command": "node",
+      "args": ["D:/agentshare/packages/mcp-server/dist/index.js"],
       "env": {
-        "AGENTSHARE_API_KEY": "agnt_your_key_here"
+        "AGENTSHARE_API_KEY": "as_e2etestkey_for_local_development_only_do_not_use_in_prod",
+        "AGENTSHARE_BASE_URL": "http://127.0.0.1:3000/api"
       }
     }
   }
 }
 ```
 
-**Tools exposed:** `agentshare_share`, `agentshare_resolve`, `agentshare_revoke`
-**Resource URI:** `agentshare://token/{id}`
+#### Try in AI Chat:
+> *"Use AgentShare to share a project snapshot: summary='Refactored database pipeline', status='completed'."*
 
-## Local Development
+---
 
-AgentShare runs locally with Postgres and MinIO. No cloud accounts required.
+## Packages & Integrations
+
+| Package | Purpose | Path |
+| :--- | :--- | :--- |
+| **`@agentshare/sdk`** | TypeScript SDK for file & state sharing | [`packages/sdk-ts`](packages/sdk-ts) |
+| **`@agentshare/mcp-server`** | Native MCP server for Claude Desktop & Cursor | [`packages/mcp-server`](packages/mcp-server) |
+| **`agentshare-langchain`** | LangChain tool integration wrapper | [`packages/agentshare-langchain`](packages/agentshare-langchain) |
+
+---
+
+## API Reference
+
+### `POST /api/upload`
+Initialize an asset upload and receive a presigned storage URL.
+
+### `POST /api/token`
+Mint a scoped (`read`, `read_write`), expiring pathway token.
+
+### `GET /api/resolve/:token`
+Resolve a token to streaming presigned download URL or selective state object (`?keys=summary` or `?path=memory.dbEngine`).
+
+### `DELETE /api/token/:token`
+Instantly revoke a pathway token.
+
+---
+
+## Local Development (Quick Run)
 
 ```bash
+# 1. Clone & install
 git clone https://github.com/techbitaibytes-bit/agentshare.git
 cd agentshare
 npm install
-cp .env.example .env.local
-# Start Postgres and MinIO (see docs/troubleshooting)
+
+# 2. Set DATABASE_URL in .env.local
+DATABASE_URL="postgresql://user:pass@host:5432/agentshare?sslmode=require"
+
+# 3. Initialize database tables & test key
+npx tsx scripts/init-db.ts
+
+# 4. Start local dev server
 npm run dev
+
+# 5. Run the multi-agent handoff demonstration
+npx tsx examples/multi-agent-handoff.ts
 ```
 
-> **Production migration:** The codebase uses thin adapters for database, storage, and auth. Switch to Neon + S3 + Clerk by updating environment variables only.
+---
 
-## Architecture
+## Project Status & Roadmap
 
-```
-┌──────────┐     ┌──────────────┐     ┌───────────┐
-│  Client   │────▶│  Next.js API  │────▶│  Postgres  │
-│  (SDK)    │     │  Routes       │     │  (schema)  │
-└──────────┘     └──────┬───────┘     └───────────┘
-                        │
-                        ▼
-                 ┌──────────────┐
-                 │  S3/MinIO     │
-                 │  (storage)    │
-                 └──────────────┘
-```
+AgentShare follows a staged rollout plan:
+
+* **Stage 0 (Security Core):** Auth.js, SHA-256 API key hashing, rate limiting, S3 presigned URLs. *(Completed)*
+* **Stage 1 (Closed Beta — Current):** Native MCP server, structured memory/state sharing, selective retrieval (`keys`/`path`), audit trails. *(Current)*
+* **Stage 2 (Public Listing):** Global npm package releases, Python SDK (`agentshare-python`), public cloud hosting. *(Upcoming)*
+* **Stage 3 (Ecosystem Breadth):** Agent framework adapters (CrewAI, AutoGen, LangGraph). *(Upcoming)*
+* **Stage 4 (Enterprise Wedge):** Org-level governance, SSO, and compliance export logs. *(Long-term)*
+
+---
+
+## Contributing & Feedback
+
+We welcome feedback, issues, and contributions from developers building agentic workflows!
+
+* **Report Issues:** Open a GitHub Issue with reproduction steps.
+* **Closed Beta Feedback:** Email `beta@agentshare.dev` or reach out via issues.
+
+---
 
 ## License
 
-MIT
+[MIT](LICENSE) © AgentShare Contributors
