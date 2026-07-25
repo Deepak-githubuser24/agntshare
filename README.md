@@ -158,7 +158,30 @@ Response: `{ "filename": "data.json", "streamUrl": "https://...", "contentType":
 |---|---|---|
 | [`@agentshare/sdk`](packages/sdk-ts) | Node.js / Edge | `npm i @agentshare/sdk` |
 | [`@agentshare/vercel-ai`](packages/vercel-ai) | Node.js / Edge | `npm i @agentshare/vercel-ai` |
+| [`@agentshare/mcp-server`](packages/mcp-server) | Node.js (stdio) | `npm i @agentshare/mcp-server` |
 | [`agentshare-langchain`](packages/agentshare-langchain) | Python 3.9+ | `pip install agentshare-langchain` |
+
+## MCP Integration
+
+AgentShare ships a native [Model Context Protocol](https://modelcontextprotocol.io/) server. Any MCP-compatible agent (Claude, Cursor, VS Code, etc.) can share, resolve, and revoke pathway tokens with zero custom code.
+
+```json
+// claude_desktop_config.json
+{
+  "mcpServers": {
+    "agentshare": {
+      "command": "npx",
+      "args": ["tsx", "packages/mcp-server/src/index.ts"],
+      "env": {
+        "AGENTSHARE_API_KEY": "agnt_your_key_here"
+      }
+    }
+  }
+}
+```
+
+**Tools exposed:** `agentshare_share`, `agentshare_resolve`, `agentshare_revoke`
+**Resource URI:** `agentshare://token/{id}`
 
 ## Local Development
 
@@ -175,12 +198,20 @@ npm run dev
 
 > **Production migration:** The codebase uses thin adapters for database, storage, and auth. Switch to Neon + S3 + Clerk by updating environment variables only.
 
-## Roadmap: MCP Server Integration
+## Architecture
 
-The next major feature planned for AgentShare is a **Model Context Protocol (MCP)** server layer. Once the July 28, 2026 stateless MCP core spec is finalized, we intend to:
-- Expose `agentshare_share` and `agentshare_resolve` as MCP tools.
-- Introduce an `agentshare://token/{id}` resource URI pattern.
-*Note: This is an upcoming feature, not currently implemented in the main branch.*
+```
+┌──────────┐     ┌──────────────┐     ┌───────────┐
+│  Client   │────▶│  Next.js API  │────▶│  Postgres  │
+│  (SDK)    │     │  Routes       │     │  (schema)  │
+└──────────┘     └──────┬───────┘     └───────────┘
+                        │
+                        ▼
+                 ┌──────────────┐
+                 │  S3/MinIO     │
+                 │  (storage)    │
+                 └──────────────┘
+```
 
 ## License
 

@@ -105,9 +105,9 @@ export class AgentShare {
     const encoder = new TextEncoder();
     const bytes = typeof data === "string" ? encoder.encode(data) : data;
     
-    // In Node or Browser with Web Crypto API
+    // Use Web Crypto API (works in Node 18+ and all modern browsers)
     if (typeof crypto !== "undefined" && crypto.subtle) {
-      const hashBuffer = await crypto.subtle.digest("SHA-256", bytes);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", bytes.buffer as ArrayBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const actualHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
       return actualHex.toLowerCase() === expectedSha256.toLowerCase();
