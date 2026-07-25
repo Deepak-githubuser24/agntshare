@@ -6,16 +6,26 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 
+function sanitizeConnectionString(url?: string): string | undefined {
+  if (!url) return undefined;
+  let clean = url.trim().replace(/^["']|["']$/g, "").trim();
+  clean = clean.replace(/[\u0000-\u001F\u007F-\u009F\uFFFD]/g, "");
+  return clean;
+}
+
 async function initDb() {
   console.log("=== AgentShare Database Initialization ===");
-  console.log(`Connecting to database at: ${process.env.DATABASE_URL ? "URL loaded from environment" : "DEFAULT (localhost:5432)"}`);
-
-  if (!process.env.DATABASE_URL) {
+  
+  const rawUrl = sanitizeConnectionString(process.env.DATABASE_URL);
+  if (!rawUrl) {
     console.log("\n⚠️  DATABASE_URL IS NOT SET IN .env.local");
     console.log("   Please add your Neon PostgreSQL connection string to D:\\agentshare\\.env.local:\n");
     console.log('   DATABASE_URL="postgresql://user:pass@ep-cool-cloud.neon.tech/agentshare?sslmode=require"\n');
     process.exit(1);
   }
+
+  const maskedUrl = rawUrl.replace(/:([^:@]+)@/, ":*****@");
+  console.log(`Connecting to database: ${maskedUrl}`);
 
   try {
     // 1. Run schema.sql
@@ -32,11 +42,11 @@ async function initDb() {
       console.log("✓ Applied agent identity migration (lib/db/migrate-003-agent-identity.sql)");
     }
 
-    // 3. Seed test user & test API key
+    // 3. Seed test user & test API key matching users table schema
     const testUserId = "00000000-0000-0000-0000-000000000000";
     await query(
-      `INSERT INTO users (id, name, email) 
-       VALUES ($1, 'Test Developer', 'test@agentshare.dev')
+      `INSERT INTO users (id, email) 
+       VALUES ($1, 'test@agentshare.dev')
        ON CONFLICT (id) DO NOTHING`,
       [testUserId]
     );
@@ -56,7 +66,7 @@ async function initDb() {
     console.log(" ✓ Seeded Test API Key: as_e2etestkey_for_local_development_only_do_not_use_in_prod");
     console.log("===================================================================\n");
   } catch (err: any) {
-    console.error("❌ Database Initialization Failed:", err.message || err);
+    console.error("\n❌ Database Initialization Failed:", err.message || err);
     process.exit(1);
   }
 }
