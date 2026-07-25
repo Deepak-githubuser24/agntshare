@@ -39,6 +39,9 @@ CREATE TABLE IF NOT EXISTS pathway_tokens (
   scope         TEXT NOT NULL DEFAULT 'read',   -- read | read_write | admin
   expires_at    TIMESTAMPTZ NOT NULL,
   revoked_at    TIMESTAMPTZ,
+  agent_id      TEXT,
+  session_id    TEXT,
+  agent_role    TEXT,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -49,6 +52,9 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   asset_id      UUID REFERENCES assets(id) ON DELETE SET NULL,
   actor_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   ip_address    TEXT,
+  agent_id      TEXT,
+  session_id    TEXT,
+  agent_role    TEXT,
   metadata      JSONB,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );

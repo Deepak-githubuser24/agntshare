@@ -40,6 +40,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
 
+  // --- Extract Agent Identity ---
+  const agentId = req.headers.get("x-agent-id") ?? undefined;
+  const sessionId = req.headers.get("x-session-id") ?? undefined;
+  const agentRole = req.headers.get("x-agent-role") ?? undefined;
+
   // --- Rate limit ---
   const rlKey = rateLimitKey(req, userId);
   const rl = checkRateLimit(rlKey, API_RATE_LIMIT);
@@ -75,7 +80,7 @@ export async function POST(req: NextRequest) {
   }
 
   let token = generatePathwayToken();
-  // Guard against the (rare) collision.
+  // Guard against collision.
   for (let attempt = 0; attempt < 3; attempt++) {
     const [existing] = await query<{ token: string }>(
       `SELECT token FROM pathway_tokens WHERE token = $1`,
@@ -88,15 +93,15 @@ export async function POST(req: NextRequest) {
   const expiresAt = ttlSecondsFromNow(ttlSeconds);
 
   await query(
-    `INSERT INTO pathway_tokens (token, asset_id, owner_id, scope, expires_at)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [token, assetId, userId, scope, expiresAt]
+    `INSERT INTO pathway_tokens (token, asset_id, owner_id, scope, expires_at, agent_id, session_id, agent_role)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [token, assetId, userId, scope, expiresAt, agentId ?? null, sessionId ?? null, agentRole ?? null]
   );
 
   await query(
-    `INSERT INTO audit_logs (event_type, token, asset_id, actor_user_id)
-     VALUES ('token_created', $1, $2, $3)`,
-    [token, assetId, userId]
+    `INSERT INTO audit_logs (event_type, token, asset_id, actor_user_id, agent_id, session_id, agent_role)
+     VALUES ('token_created', $1, $2, $3, $4, $5, $6)`,
+    [token, assetId, userId, agentId ?? null, sessionId ?? null, agentRole ?? null]
   );
 
   return NextResponse.json({
