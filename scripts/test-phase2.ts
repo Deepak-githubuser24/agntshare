@@ -1,3 +1,6 @@
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd());
+
 import { AgentShare } from "../packages/sdk-ts/src";
 import { query } from "../lib/db/client";
 import crypto from "crypto";
@@ -28,7 +31,10 @@ async function runTest() {
     apiKey = "as_e2etestkey_for_local_development_only_do_not_use_in_prod";
   }
 
-  const baseUrl = process.env.AGENTSHARE_BASE_URL ?? "http://localhost:3000/api";
+  let baseUrl = process.env.AGENTSHARE_BASE_URL ?? "http://127.0.0.1:3000/api";
+  if (!baseUrl.endsWith("/api")) {
+    baseUrl = `${baseUrl.replace(/\/+$/, "")}/api`;
+  }
 
   const client = new AgentShare({
     apiKey,
@@ -40,10 +46,12 @@ async function runTest() {
 
   // Pre-check server connection
   try {
-    const healthRes = await fetch(`${baseUrl.replace(/\/api$/, '')}/api/health`, { signal: AbortSignal.timeout(3000) }).catch(() => null);
+    const rootUrl = baseUrl.replace(/\/api\/?$/, "");
+    const healthUrl = `${rootUrl}/api/health`;
+    const healthRes = await fetch(healthUrl, { signal: AbortSignal.timeout(10000) }).catch(() => null);
     if (!healthRes || !healthRes.ok) {
       console.log("\n⚠️  COULD NOT CONNECT TO AGENTSHARE SERVER");
-      console.log(`   Expected server running at: ${baseUrl}`);
+      console.log(`   Attempted endpoint: ${healthUrl}`);
       console.log("   Please start the server first in a separate terminal window:\n");
       console.log("     cd D:\\agentshare");
       console.log("     npm run dev\n");

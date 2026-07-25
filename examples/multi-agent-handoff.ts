@@ -17,24 +17,32 @@ async function runMultiAgentHandoff() {
   console.log("===================================================================\n");
 
   const apiKey = process.env.AGENTSHARE_API_KEY ?? "as_e2etestkey_for_local_development_only_do_not_use_in_prod";
-  const baseUrl = process.env.AGENTSHARE_BASE_URL
-    ? `${process.env.AGENTSHARE_BASE_URL}/api`
-    : "http://localhost:3000/api";
+  
+  // Cleanly normalize baseUrl without duplicating /api
+  let baseUrl = process.env.AGENTSHARE_BASE_URL ?? "http://127.0.0.1:3000/api";
+  if (!baseUrl.endsWith("/api")) {
+    baseUrl = `${baseUrl.replace(/\/+$/, "")}/api`;
+  }
 
-  // Pre-check server availability
+  // Pre-check server availability (with 10s timeout to allow Next.js route compilation)
   try {
-    const healthRes = await fetch(`${baseUrl.replace(/\/api$/, '')}/api/health`, { signal: AbortSignal.timeout(3000) }).catch(() => null);
+    const rootUrl = baseUrl.replace(/\/api\/?$/, "");
+    const healthUrl = `${rootUrl}/api/health`;
+    const healthRes = await fetch(healthUrl, { signal: AbortSignal.timeout(10000) }).catch(() => null);
     if (!healthRes || !healthRes.ok) {
-      console.log("⚠️  COULD NOT CONNECT TO AGENTSHARE SERVER");
-      console.log(`   Expected server running at: ${baseUrl}`);
-      console.log("   Please start the server first in a separate terminal:\n");
-      console.log("     cd D:\\agentshare");
-      console.log("     npm run dev\n");
-      console.log("===================================================================\n");
-      return;
+      // Fallback try localhost
+      const altUrl = healthUrl.replace("127.0.0.1", "localhost");
+      const altRes = await fetch(altUrl, { signal: AbortSignal.timeout(5000) }).catch(() => null);
+      if (!altRes || !altRes.ok) {
+        console.log("⚠️  COULD NOT CONNECT TO AGENTSHARE DEV SERVER");
+        console.log(`   Attempted endpoint: ${healthUrl}`);
+        console.log("   If 'npm run dev' is running, ensure it is listening on http://127.0.0.1:3000\n");
+        console.log("===================================================================\n");
+        return;
+      }
     }
   } catch {
-    // Continue attempt
+    // Continue
   }
 
   // ── Step 1: Agent A (Planner) Shares Project State ─────────────────────────
@@ -130,9 +138,5 @@ async function runMultiAgentHandoff() {
 }
 
 runMultiAgentHandoff().catch((err) => {
-  console.log("\n⚠️  AGENTSHARE CONNECTION ERROR");
-  console.log("   Could not connect to the AgentShare dev server at http://localhost:3000/api");
-  console.log("   Please start the server first in a separate terminal window:\n");
-  console.log("     cd D:\\agentshare");
-  console.log("     npm run dev\n");
+  console.log("\n⚠️  AGENTSHARE ERROR:", err.message || err);
 });
