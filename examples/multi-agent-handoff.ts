@@ -21,6 +21,22 @@ async function runMultiAgentHandoff() {
     ? `${process.env.AGENTSHARE_BASE_URL}/api`
     : "http://localhost:3000/api";
 
+  // Pre-check server availability
+  try {
+    const healthRes = await fetch(`${baseUrl.replace(/\/api$/, '')}/api/health`, { signal: AbortSignal.timeout(3000) }).catch(() => null);
+    if (!healthRes || !healthRes.ok) {
+      console.log("⚠️  COULD NOT CONNECT TO AGENTSHARE SERVER");
+      console.log(`   Expected server running at: ${baseUrl}`);
+      console.log("   Please start the server first in a separate terminal:\n");
+      console.log("     cd D:\\agentshare");
+      console.log("     npm run dev\n");
+      console.log("===================================================================\n");
+      return;
+    }
+  } catch {
+    // Continue attempt
+  }
+
   // ── Step 1: Agent A (Planner) Shares Project State ─────────────────────────
   console.log("🤖 [Agent A - Architecture Planner]");
   const plannerClient = new AgentShare({
@@ -113,4 +129,10 @@ async function runMultiAgentHandoff() {
   console.log("===================================================================\n");
 }
 
-runMultiAgentHandoff().catch(console.error);
+runMultiAgentHandoff().catch((err) => {
+  console.log("\n⚠️  AGENTSHARE CONNECTION ERROR");
+  console.log("   Could not connect to the AgentShare dev server at http://localhost:3000/api");
+  console.log("   Please start the server first in a separate terminal window:\n");
+  console.log("     cd D:\\agentshare");
+  console.log("     npm run dev\n");
+});
