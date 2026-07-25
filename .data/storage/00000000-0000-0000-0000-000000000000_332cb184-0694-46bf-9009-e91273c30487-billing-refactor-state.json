@@ -1,0 +1,21 @@
+{
+  "summary": "Refactored user billing pipeline to async event queue",
+  "decisions": [
+    "Decouple Stripe webhook processing from HTTP request cycle",
+    "Store idempotency keys in Redis with 24h TTL",
+    "Log audit events to PostgreSQL audit_logs table"
+  ],
+  "memory": {
+    "dbEngine": "PostgreSQL 16",
+    "cacheEngine": "Redis 7.2",
+    "queueProvider": "SQS",
+    "retryLimit": 3
+  },
+  "context": {
+    "sprintId": "sprint-88",
+    "assignedDevs": [
+      "agent-coder-v2",
+      "agent-reviewer-v1"
+    ]
+  }
+}

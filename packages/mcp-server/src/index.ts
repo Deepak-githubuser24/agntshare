@@ -38,20 +38,15 @@ export interface AgentShareMCPConfig {
 }
 
 function loadConfig(): AgentShareMCPConfig {
-  const apiKey = process.env.AGENTSHARE_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      "AGENTSHARE_API_KEY environment variable is required.\n" +
-      "Set it before starting the MCP server:\n" +
-      "  export AGENTSHARE_API_KEY=agnt_..."
-    );
-  }
+  const apiKey = process.env.AGENTSHARE_API_KEY || "as_e2etestkey_for_local_development_only_do_not_use_in_prod";
+  const baseUrl = (process.env.AGENTSHARE_BASE_URL || "http://127.0.0.1:3000/api").replace("localhost", "127.0.0.1");
+
   return {
     apiKey,
-    baseUrl: process.env.AGENTSHARE_BASE_URL ?? "http://localhost:3000/api",
-    agentId: process.env.AGENTSHARE_AGENT_ID,
-    sessionId: process.env.AGENTSHARE_SESSION_ID,
-    agentRole: process.env.AGENTSHARE_AGENT_ROLE ?? "mcp-server",
+    baseUrl,
+    agentId: process.env.AGENTSHARE_AGENT_ID || "claude-desktop-mcp",
+    sessionId: process.env.AGENTSHARE_SESSION_ID || "desktop-session",
+    agentRole: process.env.AGENTSHARE_AGENT_ROLE || "mcp-server",
   };
 }
 
