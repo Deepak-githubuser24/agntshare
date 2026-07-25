@@ -5,22 +5,31 @@ const types_1 = require("./types");
 class AgentShare {
     apiKey;
     baseUrl;
+    agentId;
+    sessionId;
+    agentRole;
     constructor(config) {
-        // Allows setting via env var or explicit config
-        this.apiKey = config?.apiKey || process.env.AGENTSHARE_API_KEY || "";
-        this.baseUrl = config?.baseUrl || process.env.AGENTSHARE_BASE_URL || "http://localhost:3000/api";
+        this.apiKey = config?.apiKey || (typeof process !== "undefined" ? process.env?.AGENTSHARE_API_KEY : "") || "";
+        this.baseUrl = config?.baseUrl || (typeof process !== "undefined" ? process.env?.AGENTSHARE_BASE_URL : "") || "http://localhost:3000/api";
+        this.agentId = config?.agentId;
+        this.sessionId = config?.sessionId;
+        this.agentRole = config?.agentRole;
     }
     async fetch(path, options = {}) {
         const headers = new Headers(options.headers);
-        if (!headers.has("Content-Type") && options.method !== "GET" && options.method !== "HEAD") {
+        if (!headers.has("Content-Type") && options.method !== "GET" && options.method !== "HEAD" && options.method !== "DELETE") {
             headers.set("Content-Type", "application/json");
         }
-        // For local testing MVP, auth is assumed via session or headers, but we standardise on Authorization
         if (this.apiKey) {
             headers.set("Authorization", `Bearer ${this.apiKey}`);
-            // Fallback for current local MVP endpoints which use custom headers
             headers.set("x-user-id", this.apiKey);
         }
+        if (this.agentId)
+            headers.set("x-agent-id", this.agentId);
+        if (this.sessionId)
+            headers.set("x-session-id", this.sessionId);
+        if (this.agentRole)
+            headers.set("x-agent-role", this.agentRole);
         const res = await fetch(`${this.baseUrl}${path}`, {
             ...options,
             headers,
@@ -52,11 +61,147 @@ class AgentShare {
     }
     /**
      * Step 3: Resolve a token into a secure, presigned stream URL.
+     * Supports optional intent ("read" | "write"), selective keys, or dot-notation path.
      */
-    async resolve(token) {
-        return this.fetch(`/resolve/${token}`, {
+    async resolve(token, options) {
+        const queryParams = new URLSearchParams();
+        if (options?.intent)
+            queryParams.set("intent", options.intent);
+        if (options?.keys && options.keys.length > 0)
+            queryParams.set("keys", options.keys.join(","));
+        if (options?.path)
+            queryParams.set("path", options.path);
+        const queryString = queryParams.toString() ? `?${queryParams.toString()}` : "";
+        return this.fetch(`/resolve/${token}${queryString}`, {
             method: "GET",
         });
+    }
+    /**
+     * Revoke an active pathway token immediately.
+     */
+    async revokeToken(token) {
+        return this.fetch(`/token/${token}`, {
+            method: "DELETE",
+        });
+    }
+    /**
+     * High-level helper: Share structured agent memory / project state.
+     * Serializes the object, computes SHA-256 checksum, uploads to S3, and mints a pathway token.
+     */
+    async shareState(options) {
+        const filename = options.filename ?? `state-${Date.now()}.json`;
+        const content = JSON.stringify(options.state, null, 2);
+        const contentBytes = typeof TextEncoder !== "undefined"
+            ? new TextEncoder().encode(content)
+            : Buffer.from(content, "utf-8");
+        // Compute checksum
+        let checksumSha256 = "";
+        if (typeof crypto !== "undefined" && crypto.subtle) {
+            const hashBuffer = await crypto.subtle.digest("SHA-256", contentBytes.buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            checksumSha256 = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+        }
+        // 1. Initialize upload
+        const { uploadUrl, assetId } = await this.upload({
+            filename,
+            contentType: "application/json",
+            sizeBytes: contentBytes.byteLength,
+            checksumSha256: checksumSha256 || undefined,
+        });
+        // 2. PUT directly to presigned URL
+        const putRes = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: content,
+        });
+        if (!putRes.ok) {
+            throw new types_1.AgentShareError(`Failed to upload state payload to S3: HTTP ${putRes.status}`);
+        }
+        // 3. Mint token
+        const mint = await this.mintToken({
+            assetId,
+            scope: options.scope ?? "read",
+            ttlSeconds: options.ttlSeconds,
+        });
+        return {
+            token: mint.token,
+            shareUrl: mint.shareUrl,
+            assetId,
+            checksumSha256,
+            scope: mint.scope,
+            expiresAt: mint.expiresAt,
+        };
+    }
+    /**
+     * High-level helper: Resolve a token and parse its JSON memory/state content.
+     * Supports selective retrieval by `keys` or dot-notation `path`.
+     */
+    async resolveState(token, options) {
+        const resolved = await this.resolve(token, options);
+        const fileRes = await fetch(resolved.streamUrl);
+        if (!fileRes.ok) {
+            throw new types_1.AgentShareError(`Failed to download state payload: HTTP ${fileRes.status}`);
+        }
+        const rawText = await fileRes.text();
+        // Verify checksum if present
+        let checksumValid;
+        if (resolved.checksumSha256) {
+            checksumValid = await AgentShare.verifyChecksum(rawText, resolved.checksumSha256);
+        }
+        const fullObj = JSON.parse(rawText);
+        const selectedState = AgentShare.selectFromJSON(fullObj, options?.keys, options?.path);
+        return {
+            filename: resolved.filename,
+            contentType: resolved.contentType,
+            scope: resolved.scope,
+            checksumSha256: resolved.checksumSha256,
+            checksumValid,
+            state: selectedState,
+        };
+    }
+    /**
+     * Helper utility to perform selective extraction on JSON data.
+     * Accepts top-level or array of keys (e.g. ["summary", "decisions"]) or dot-notation path (e.g. "memory.database").
+     */
+    static selectFromJSON(data, keys, path) {
+        if (!data || typeof data !== "object")
+            return data;
+        // Handle dot-notation path (e.g. "memory.database")
+        if (path) {
+            const parts = path.split(".");
+            let current = data;
+            for (const part of parts) {
+                if (current === undefined || current === null)
+                    return undefined;
+                current = current[part];
+            }
+            return current;
+        }
+        // Handle top-level keys filter (e.g. ["summary", "decisions"])
+        if (keys && keys.length > 0) {
+            const result = {};
+            for (const key of keys) {
+                if (key in data) {
+                    result[key] = data[key];
+                }
+            }
+            return result;
+        }
+        return data;
+    }
+    /**
+     * Helper utility to verify the SHA-256 checksum of raw data against an expected hex digest.
+     */
+    static async verifyChecksum(data, expectedSha256) {
+        const encoder = new TextEncoder();
+        const bytes = typeof data === "string" ? encoder.encode(data) : data;
+        if (typeof crypto !== "undefined" && crypto.subtle) {
+            const hashBuffer = await crypto.subtle.digest("SHA-256", bytes.buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const actualHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+            return actualHex.toLowerCase() === expectedSha256.toLowerCase();
+        }
+        return false;
     }
 }
 exports.AgentShare = AgentShare;

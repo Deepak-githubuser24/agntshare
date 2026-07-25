@@ -2,6 +2,7 @@ export interface UploadOptions {
     filename: string;
     contentType: string;
     sizeBytes: number;
+    checksumSha256?: string;
 }
 export interface UploadResponse {
     assetId: string;
@@ -18,12 +19,45 @@ export interface MintTokenResponse {
     scope: string;
     expiresAt: string;
 }
+export interface ResolveOptions {
+    intent?: "read" | "write";
+    keys?: string[];
+    path?: string;
+}
 export interface ResolveTokenResponse {
     filename: string;
     contentType: string;
     sizeBytes: number;
     scope: string;
     streamUrl: string;
+    checksumSha256?: string | null;
+    uploadUrl?: string;
+}
+export interface RevokeTokenResponse {
+    success: boolean;
+    token: string;
+    revokedAt: string;
+}
+export interface ShareStateOptions {
+    state: Record<string, any>;
+    filename?: string;
+    scope?: "read" | "read_write" | "admin";
+    ttlSeconds?: number;
+}
+export interface ShareStateResponse {
+    token: string;
+    shareUrl: string;
+    assetId: string;
+    checksumSha256: string;
+    scope: string;
+    expiresAt: string;
+}
+export interface AgentShareConfig {
+    apiKey?: string;
+    baseUrl?: string;
+    agentId?: string;
+    sessionId?: string;
+    agentRole?: string;
 }
 export declare class AgentShareError extends Error {
     status?: number;

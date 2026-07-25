@@ -31,9 +31,12 @@ export async function GET(
   const sessionId = req.headers.get("x-session-id") ?? undefined;
   const agentRole = req.headers.get("x-agent-role") ?? undefined;
 
-  // --- Extract Intent ---
+  // --- Extract Intent & Selective Retrieval Parameters ---
   const { searchParams } = new URL(req.url);
   const intent = searchParams.get("intent") ?? "read";
+  const keysParam = searchParams.get("keys");
+  const pathParam = searchParams.get("path");
+  const keys = keysParam ? keysParam.split(",").map((k) => k.trim()) : undefined;
 
   const [pathwayToken] = await query<PathwayTokenRow>(
     `SELECT token, asset_id, scope, expires_at, revoked_at
@@ -78,7 +81,15 @@ export async function GET(
   await query(
     `INSERT INTO audit_logs (event_type, token, asset_id, ip_address, agent_id, session_id, agent_role, metadata)
      VALUES ('token_resolved', $1, $2, $3, $4, $5, $6, $7)`,
-    [token, asset.id, ip, agentId ?? null, sessionId ?? null, agentRole ?? null, JSON.stringify({ intent, scope: pathwayToken.scope })]
+    [
+      token,
+      asset.id,
+      ip,
+      agentId ?? null,
+      sessionId ?? null,
+      agentRole ?? null,
+      JSON.stringify({ intent, scope: pathwayToken.scope, selectiveKeys: keys ?? null, selectivePath: pathParam ?? null }),
+    ]
   );
 
   return NextResponse.json({

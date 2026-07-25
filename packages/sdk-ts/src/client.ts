@@ -6,6 +6,8 @@ import {
   ResolveOptions,
   ResolveTokenResponse,
   RevokeTokenResponse,
+  ShareStateOptions,
+  ShareStateResponse,
   AgentShareConfig,
   AgentShareError,
 } from "./types";
@@ -80,11 +82,16 @@ export class AgentShare {
 
   /**
    * Step 3: Resolve a token into a secure, presigned stream URL.
-   * Pass options.intent = "write" if you have read_write scope and need an uploadUrl to update the asset.
+   * Supports optional intent ("read" | "write"), selective keys, or dot-notation path.
    */
   async resolve(token: string, options?: ResolveOptions): Promise<ResolveTokenResponse> {
-    const intentQuery = options?.intent ? `?intent=${options.intent}` : "";
-    return this.fetch<ResolveTokenResponse>(`/resolve/${token}${intentQuery}`, {
+    const queryParams = new URLSearchParams();
+    if (options?.intent) queryParams.set("intent", options.intent);
+    if (options?.keys && options.keys.length > 0) queryParams.set("keys", options.keys.join(","));
+    if (options?.path) queryParams.set("path", options.path);
+
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : "";
+    return this.fetch<ResolveTokenResponse>(`/resolve/${token}${queryString}`, {
       method: "GET",
     });
   }
@@ -99,13 +106,142 @@ export class AgentShare {
   }
 
   /**
+   * High-level helper: Share structured agent memory / project state.
+   * Serializes the object, computes SHA-256 checksum, uploads to S3, and mints a pathway token.
+   */
+  async shareState(options: ShareStateOptions): Promise<ShareStateResponse> {
+    const filename = options.filename ?? `state-${Date.now()}.json`;
+    const content = JSON.stringify(options.state, null, 2);
+    const contentBytes = typeof TextEncoder !== "undefined" 
+      ? new TextEncoder().encode(content) 
+      : Buffer.from(content, "utf-8");
+
+    // Compute checksum
+    let checksumSha256 = "";
+    if (typeof crypto !== "undefined" && crypto.subtle) {
+      const hashBuffer = await crypto.subtle.digest("SHA-256", contentBytes.buffer as ArrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      checksumSha256 = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    // 1. Initialize upload
+    const { uploadUrl, assetId } = await this.upload({
+      filename,
+      contentType: "application/json",
+      sizeBytes: contentBytes.byteLength,
+      checksumSha256: checksumSha256 || undefined,
+    });
+
+    // 2. PUT directly to presigned URL
+    const putRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: content,
+    });
+
+    if (!putRes.ok) {
+      throw new AgentShareError(`Failed to upload state payload to S3: HTTP ${putRes.status}`);
+    }
+
+    // 3. Mint token
+    const mint = await this.mintToken({
+      assetId,
+      scope: options.scope ?? "read",
+      ttlSeconds: options.ttlSeconds,
+    });
+
+    return {
+      token: mint.token,
+      shareUrl: mint.shareUrl,
+      assetId,
+      checksumSha256,
+      scope: mint.scope,
+      expiresAt: mint.expiresAt,
+    };
+  }
+
+  /**
+   * High-level helper: Resolve a token and parse its JSON memory/state content.
+   * Supports selective retrieval by `keys` or dot-notation `path`.
+   */
+  async resolveState<T = any>(
+    token: string,
+    options?: ResolveOptions
+  ): Promise<{
+    filename: string;
+    contentType: string;
+    scope: string;
+    checksumSha256?: string | null;
+    checksumValid?: boolean;
+    state: T;
+  }> {
+    const resolved = await this.resolve(token, options);
+    const fileRes = await fetch(resolved.streamUrl);
+    
+    if (!fileRes.ok) {
+      throw new AgentShareError(`Failed to download state payload: HTTP ${fileRes.status}`);
+    }
+
+    const rawText = await fileRes.text();
+
+    // Verify checksum if present
+    let checksumValid: boolean | undefined;
+    if (resolved.checksumSha256) {
+      checksumValid = await AgentShare.verifyChecksum(rawText, resolved.checksumSha256);
+    }
+
+    const fullObj = JSON.parse(rawText);
+    const selectedState = AgentShare.selectFromJSON(fullObj, options?.keys, options?.path);
+
+    return {
+      filename: resolved.filename,
+      contentType: resolved.contentType,
+      scope: resolved.scope,
+      checksumSha256: resolved.checksumSha256,
+      checksumValid,
+      state: selectedState as T,
+    };
+  }
+
+  /**
+   * Helper utility to perform selective extraction on JSON data.
+   * Accepts top-level or array of keys (e.g. ["summary", "decisions"]) or dot-notation path (e.g. "memory.database").
+   */
+  static selectFromJSON(data: any, keys?: string[], path?: string): any {
+    if (!data || typeof data !== "object") return data;
+
+    // Handle dot-notation path (e.g. "memory.database")
+    if (path) {
+      const parts = path.split(".");
+      let current = data;
+      for (const part of parts) {
+        if (current === undefined || current === null) return undefined;
+        current = current[part];
+      }
+      return current;
+    }
+
+    // Handle top-level keys filter (e.g. ["summary", "decisions"])
+    if (keys && keys.length > 0) {
+      const result: Record<string, any> = {};
+      for (const key of keys) {
+        if (key in data) {
+          result[key] = data[key];
+        }
+      }
+      return result;
+    }
+
+    return data;
+  }
+
+  /**
    * Helper utility to verify the SHA-256 checksum of raw data against an expected hex digest.
    */
   static async verifyChecksum(data: string | Uint8Array, expectedSha256: string): Promise<boolean> {
     const encoder = new TextEncoder();
     const bytes = typeof data === "string" ? encoder.encode(data) : data;
     
-    // Use Web Crypto API (works in Node 18+ and all modern browsers)
     if (typeof crypto !== "undefined" && crypto.subtle) {
       const hashBuffer = await crypto.subtle.digest("SHA-256", bytes.buffer as ArrayBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));

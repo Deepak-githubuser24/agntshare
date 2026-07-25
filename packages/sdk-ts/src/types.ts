@@ -25,6 +25,8 @@ export interface MintTokenResponse {
 
 export interface ResolveOptions {
   intent?: "read" | "write";
+  keys?: string[];
+  path?: string;
 }
 
 export interface ResolveTokenResponse {
@@ -41,6 +43,22 @@ export interface RevokeTokenResponse {
   success: boolean;
   token: string;
   revokedAt: string;
+}
+
+export interface ShareStateOptions {
+  state: Record<string, any>;
+  filename?: string;
+  scope?: "read" | "read_write" | "admin";
+  ttlSeconds?: number;
+}
+
+export interface ShareStateResponse {
+  token: string;
+  shareUrl: string;
+  assetId: string;
+  checksumSha256: string;
+  scope: string;
+  expiresAt: string;
 }
 
 export interface AgentShareConfig {

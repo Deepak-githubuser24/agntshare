@@ -1,12 +1,12 @@
 /**
  * AgentShare MCP Server
  *
- * Exposes AgentShare's secure file/artifact sharing via the Model Context Protocol.
+ * Exposes AgentShare's secure file/artifact/memory sharing via the Model Context Protocol.
  * Built using the official `@modelcontextprotocol/sdk`.
  *
  * Exposes 3 core tools:
- *   - `agentshare_share`: Upload content and mint a short pathway token
- *   - `agentshare_resolve`: Resolve a pathway token to retrieve shared content & verify checksum
+ *   - `agentshare_share`: Share structured agent memory / state OR plain text file content
+ *   - `agentshare_resolve`: Resolve a pathway token with optional selective retrieval (`keys` or `path`)
  *   - `agentshare_revoke`: Revoke a pathway token to permanently destroy access
  *
  * Exposes 1 resource:
