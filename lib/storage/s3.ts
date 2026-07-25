@@ -5,7 +5,15 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const hasCustomS3 = Boolean(process.env.S3_ACCESS_KEY_ID && process.env.S3_ENDPOINT);
+// Smart detection: Use real S3 only if explicit non-default credentials and endpoint are provided.
+// Otherwise, fall back to zero-dependency built-in /api/dev-storage route for local development.
+const hasCustomS3 = Boolean(
+  process.env.S3_ACCESS_KEY_ID &&
+  process.env.S3_ACCESS_KEY_ID !== "minioadmin" &&
+  process.env.S3_ENDPOINT &&
+  !process.env.S3_ENDPOINT.includes("localhost:9000") &&
+  !process.env.S3_ENDPOINT.includes("127.0.0.1:9000")
+);
 
 const accessKeyId = process.env.S3_ACCESS_KEY_ID || "minioadmin";
 const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY || "minioadmin";
@@ -23,10 +31,16 @@ export const s3 = new S3Client({
   },
 });
 
+function getAppUrl(): string {
+  let appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://127.0.0.1:3000";
+  appUrl = appUrl.replace("localhost", "127.0.0.1");
+  return appUrl.replace(/\/+$/, "");
+}
+
 export async function getUploadUrl(key: string, contentType: string) {
-  // If S3 credentials are not configured, use local dev storage route
+  // If real S3 credentials are not configured, use built-in dev storage route
   if (!hasCustomS3) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://127.0.0.1:3000";
+    const appUrl = getAppUrl();
     return `${appUrl}/api/dev-storage?key=${encodeURIComponent(key)}`;
   }
 
@@ -43,9 +57,9 @@ export async function getUploadUrl(key: string, contentType: string) {
 }
 
 export async function getDownloadUrl(key: string, expiresInSeconds = 300) {
-  // If S3 credentials are not configured, use local dev storage route
+  // If real S3 credentials are not configured, use built-in dev storage route
   if (!hasCustomS3) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://127.0.0.1:3000";
+    const appUrl = getAppUrl();
     return `${appUrl}/api/dev-storage?key=${encodeURIComponent(key)}`;
   }
 

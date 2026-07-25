@@ -147,6 +147,8 @@ export class AgentShare {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: content,
+    }).catch((err) => {
+      throw new AgentShareError(`Failed to upload state payload to URL (${uploadUrl}): ${err.message || err}`);
     });
 
     if (!putRes.ok) {
