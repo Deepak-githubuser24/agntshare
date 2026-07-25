@@ -49,11 +49,22 @@ export class AgentShare {
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => null);
-      throw new AgentShareError(
-        errorData?.error || `Request failed with status ${res.status}`,
-        res.status,
-        errorData?.details
-      );
+      const rawError = errorData?.error || `HTTP ${res.status}`;
+      let message = `[AgentShare Error ${res.status}] ${rawError}`;
+
+      if (res.status === 401) {
+        message += " — Unauthenticated. Verify your AGENTSHARE_API_KEY environment variable or config.";
+      } else if (res.status === 403) {
+        message += " — Forbidden. Insufficient scope or token owner mismatch. Ensure token has required scope (e.g. read_write for intent=write).";
+      } else if (res.status === 404) {
+        message += " — Not Found. The requested pathway token or asset ID does not exist.";
+      } else if (res.status === 410) {
+        message += " — Token Inactive. This pathway token has expired or was explicitly revoked.";
+      } else if (res.status === 429) {
+        message += " — Rate Limit Exceeded. Too many requests in window. Please wait before retrying.";
+      }
+
+      throw new AgentShareError(message, res.status, errorData?.details ?? errorData);
     }
 
     return res.json();
