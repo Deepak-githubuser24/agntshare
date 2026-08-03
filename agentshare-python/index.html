@@ -1,0 +1,386 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGNT.SR | HTTPS for AI Agent State</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.cdnfonts.com/css/geist');
+
+        :root {
+            --bg-color: #09090b;
+            --accent-glow: radial-gradient(circle at center, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+        }
+
+        body {
+            font-family: 'Inter', 'Geist', sans-serif;
+            background-color: var(--bg-color);
+            color: #fafafa;
+            overflow-x: hidden;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .dot-grid {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .glow-effect {
+            position: absolute;
+            width: 1000px;
+            height: 1000px;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bento-card {
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bento-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .bento-card:hover::before {
+            opacity: 1;
+        }
+
+        .bento-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+        }
+
+        .bento-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .glow-code {
+            position: relative;
+            background: radial-gradient(circle at center, rgba(100, 200, 255, 0.1) 0%, transparent 60%);
+            border-radius: 8px;
+            padding: 12px;
+            backdrop-filter: blur(8px);
+        }
+
+        .json-dim { 
+            opacity: 0.3; 
+            filter: grayscale(1); 
+            transition: all 0.4s ease; 
+        }
+
+        .json-active { 
+            opacity: 1; 
+            filter: none; 
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes checkmark {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .animate-reveal {
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .json-key { color: #9cdcfe; }
+        .json-string { color: #ce9178; }
+        .json-num { color: #b5cea8; }
+        .json-bool { color: #569cd6; }
+
+        .subpixel-border {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .filter-chip {
+            white-space: nowrap;
+        }
+
+        .filter-chip.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .copy-btn-state {
+            transition: all 0.2s ease;
+        }
+
+        .copy-success {
+            animation: checkmark 0.6s ease;
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Toast notification */
+        #toast-container {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #toast-container.toast-visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(15, 15, 17, 0.92);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255,255,255,0.02);
+            backdrop-filter: blur(12px);
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #ecfdf5;
+        }
+
+        .toast-check {
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: rgba(16, 185, 129, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #34d399;
+        }
+
+        .toast-check iconify-icon {
+            font-size: 12px;
+        }
+
+        .toast-visible .toast-check {
+            animation: checkmark 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .qs-tab {
+            color: #71717a;
+        }
+
+        /* Ecosystem marquee */
+        .marquee-mask {
+            -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+        }
+
+        .marquee-track {
+            animation: marquee-scroll 32s linear infinite;
+        }
+
+        .marquee-mask:hover .marquee-track {
+            animation-play-state: paused;
+        }
+
+        @keyframes marquee-scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        .logo-chip {
+            color: #52525b;
+            filter: grayscale(1);
+            opacity: 0.6;
+            transition: all 0.4s ease;
+        }
+
+        .logo-chip:hover {
+            color: #fafafa;
+            opacity: 1;
+            filter: grayscale(0.2);
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.25);
+        }
+
+        /* Visionary end-state */
+        .visionary-section {
+            background-color: #060607;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .visionary-glow {
+            background:
+                radial-gradient(circle at 30% 20%, rgba(16, 185, 129, 0.14) 0%, transparent 55%),
+                radial-gradient(circle at 75% 80%, rgba(99, 102, 241, 0.16) 0%, transparent 55%);
+        }
+
+        .visionary-cta-glow {
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        .qs-tab.active {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fafafa;
+        }
+
+        .token-toggle {
+            color: #71717a;
+        }
+
+        .token-toggle.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fafafa;
+        }
+
+        .provenance-badge {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            box-shadow: 0 0 24px rgba(16, 185, 129, 0.15);
+        }
+
+        .provenance-badge.expired {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            box-shadow: 0 0 24px rgba(239, 68, 68, 0.15);
+        }
+
+        #provenance-dot {
+            background: #34d399;
+        }
+
+        .provenance-badge.expired #provenance-dot {
+            background: #f87171;
+        }
+    </style></head><body>
+    <div class="min-h-screen dot-grid relative flex flex-col items-center">
+        <!-- Navigation -->
+        <nav class="w-full fixed top-0 z-50 px-6 py-4 flex items-center justify-center pointer-events-none">
+            <div class="max-w-7xl w-full flex items-center justify-between pointer-events-auto bg-black/40 backdrop-blur-xl border border-white/10 rounded-full px-6 py-2.5">
+                <div class="flex items-center gap-8">
+                    <a href="/" id="nav-logo" class="text-xl font-bold tracking-tighter mono">AGNT.SR</a>
+                    <div class="hidden md:flex items-center gap-6 text-[13px] font-medium text-zinc-400">
+                        <a href="https://github.com/agntshare/agentshare-python#readme" target="_blank" id="nav-rfc" class="hover:text-white transition-colors">Docs &amp; RFC</a>
+                        <a href="https://github.com/agntshare/agentshare-python" target="_blank" id="nav-github-link" class="hover:text-white transition-colors">GitHub</a>
+                        <a href="https://pypi.org/project/agntshare/" target="_blank" id="nav-pypi" class="hover:text-white transition-colors">PyPI</a>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="https://github.com/agntshare/agentshare-python" target="_blank" id="nav-github" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 text-[13px] font-medium hover:bg-white/5 transition-colors">
+                        <iconify-icon icon="lucide:star" class="text-amber-400"></iconify-icon>
+                        <span>v0.1.0</span>
+                    </a>
+                    <a href="https://pypi.org/project/agntshare/" target="_blank" id="nav-cta" class="bg-white text-black px-4 py-1.5 rounded-full text-[13px] font-semibold hover:bg-zinc-200 transition-colors">
+                        pip install agntshare
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="w-full max-w-7xl px-6 pt-44 pb-32 relative z-10 flex flex-col items-center">
+            <!-- Hero Section -->
+            <section class="text-center max-w-4xl animate-reveal">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[11px] font-bold tracking-widest uppercase mb-6 text-zinc-400">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    v0.1.0 Protocol Standardized
+                </div>
+                <h1 class="text-6xl md:text-8xl font-extrabold tracking-tight mb-8 leading-[0.9] text-white">
+                    HTTPS for <span class="text-zinc-500">AI Agent State.</span>
+                </h1>
+                <p class="text-lg md:text-xl text-zinc-400 mb-10 leading-relaxed max-w-2xl mx-auto">
+                    Today, agents hand off tasks by stuffing 100k+ tokens of raw memory into prompt windows. It's slow, expensive, and degrades context. Agntshare replaces raw context with a cryptographically verified 'coat-check ticket'. Pass the token, not the bloat.
+                </p>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="https://pypi.org/project/agntshare/" target="_blank" id="hero-cta-primary" class="bg-white text-black px-8 py-3.5 rounded-xl font-bold text-[15px] flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all">
+                        pip install agntshare
+                        <iconify-icon icon="lucide:arrow-right" class="text-lg"></iconify-icon>
+                    </a>
+                    <a href="https://github.com/agntshare/agentshare-python" target="_blank" id="hero-cta-docs" class="border border-white/10 bg-white/5 px-8 py-3.5 rounded-xl font-bold text-[15px] hover:bg-white/10 transition-all">
+                        View GitHub Repo
+                    </a>
+                </div>
+            </section>
+
+            <!-- Ecosystem & Integrations -->
+            <section class="mt-48 w-full animate-reveal">
+                <div class="flex flex-col items-center text-center mb-14 px-6">
+                    <h2 class="text-4xl font-extrabold tracking-tight mb-4">The Universal Translator for Agentic State.</h2>
+                    <p class="text-zinc-500 max-w-xl">Tokens resolve identically regardless of the originating stack.</p>
+                </div>
+
+                <div class="marquee-mask relative w-full overflow-hidden">
+                    <div class="marquee-track flex items-center gap-16 w-max">
+                        <!-- Set A -->
+                        <div class="flex items-center gap-16 shrink-0">
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="simple-icons:langchain" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">LangChain</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="lucide:users" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">CrewAI</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="lucide:git-branch" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">AutoGen</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="lucide:layers" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">LlamaIndex</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="lucide:plug-2" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">Model Context Protocol</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="simple-icons:python" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">Python</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="simple-icons:typescript" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">TypeScript</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="simple-icons:go" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">Go</span></div>
+                        </div>
+                        <!-- Set B -->
+                        <div class="flex items-center gap-16 shrink-0" aria-hidden="true">
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="simple-icons:langchain" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">LangChain</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="lucide:users" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">CrewAI</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="lucide:git-branch" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">AutoGen</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="lucide:layers" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">LlamaIndex</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="lucide:plug-2" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">Model Context Protocol</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="simple-icons:python" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">Python</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="simple-icons:typescript" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">TypeScript</span></div>
+                            <div class="logo-chip flex items-center gap-2.5"><iconify-icon icon="simple-icons:go" class="text-2xl"></iconify-icon><span class="mono text-sm font-medium">Go</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="mt-48 w-full border-t border-white/5 pt-12 pb-12 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="font-bold tracking-tighter mono text-white text-sm">AGNT.SR</span>
+                    <span>© 2026 Agntshare Protocol Standards</span>
+                </div>
+                <div class="flex items-center gap-6">
+                    <a href="https://github.com/agntshare/agentshare-python" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+                    <a href="https://pypi.org/project/agntshare/" target="_blank" class="hover:text-white transition-colors">PyPI</a>
+                    <a href="#" class="hover:text-white transition-colors">MIT License</a>
+                </div>
+            </footer>
+        </main>
+    </div>
+</body>
+</html>
