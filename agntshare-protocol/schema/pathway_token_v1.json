@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agnt.sr/schema/pathway_token_v1.json",
+  "title": "Agntshare Pathway Token Metadata Schema v1",
+  "description": "Strict specification for Agntshare Pathway Token client-side metadata, access scopes, cryptographic provenance, and payload integrity checksums.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Version of the Pathway Token specification.",
+      "default": "1.0.0",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "framework": {
+      "type": "string",
+      "description": "Originating AI agent framework (e.g. langchain, crewai, llamaindex, autogen, custom).",
+      "minLength": 1
+    },
+    "intent": {
+      "type": "string",
+      "description": "Access scope intent granted to the pathway token holder.",
+      "enum": [
+        "read",
+        "read_write"
+      ]
+    },
+    "ttl_seconds": {
+      "type": "integer",
+      "description": "Time-To-Live expiration window in seconds. Must be strictly greater than 0.",
+      "minimum": 1
+    },
+    "cryptographic_signature": {
+      "type": "string",
+      "description": "Cryptographic signature produced by the originating client SDK for provenance verification.",
+      "minLength": 1
+    },
+    "payload_checksum": {
+      "type": "string",
+      "description": "Hex-encoded SHA-256 hash digest of the raw state/file payload.",
+      "pattern": "^[a-fA-F0-9]{64}$"
+    }
+  },
+  "required": [
+    "schema_version",
+    "framework",
+    "intent",
+    "ttl_seconds",
+    "cryptographic_signature",
+    "payload_checksum"
+  ],
+  "additionalProperties": false
+}

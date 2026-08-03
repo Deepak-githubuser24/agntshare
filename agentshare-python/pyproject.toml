@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentshare"
+version = "0.1.0"
+description = "HTTPS for AI Agent State. Lightweight, cryptographically verified Pathway Tokens to eliminate context bloat."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Deepak V", email = "founders@agnt.sr"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = []
+
+[project.optional-dependencies]
+mcp = ["mcp>=0.1.0"]
+
+[project.urls]
+Homepage = "https://agnt.sr"
+Repository = "https://github.com/agntshare/agentshare-python"
+"Bug Tracker" = "https://github.com/agntshare/agentshare-python/issues"

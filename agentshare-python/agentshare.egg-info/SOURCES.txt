@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+agentshare/__init__.py
+agentshare/client.py
+agentshare.egg-info/PKG-INFO
+agentshare.egg-info/SOURCES.txt
+agentshare.egg-info/dependency_links.txt
+agentshare.egg-info/requires.txt
+agentshare.egg-info/top_level.txt
+agentshare/integrations/__init__.py
+agentshare/integrations/langchain.py
+agentshare/integrations/mcp_server.py
+tests/test_langchain_hook.py
+tests/test_mcp_server.py

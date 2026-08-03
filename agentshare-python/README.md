@@ -1,0 +1,64 @@
+# Agntshare (agnt.sr)
+**HTTPS for AI Agent State.**
+
+[![PyPI version](https://badge.fury.io/py/agentshare.svg)](https://badge.fury.io/py/agentshare)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Today, AI agents hand off tasks by stuffing 100k+ tokens of raw memory into prompt windows. It’s slow, expensive, and degrades context. 
+
+Agntshare replaces raw context with a cryptographically verified **"coat-check ticket"** (Pathway Token). Mint a token on Agent A, pass a tiny 28-byte string, and let Agent B resolve the exact state it needs.
+
+## 🚀 Quickstart
+
+Install the zero-dependency SDK:
+```bash
+pip install agentshare
+```
+
+**Zero-Friction Local Handoff (No API Keys Required):**
+```python
+from agentshare import AgentShareClient
+
+# Initialize in local sandbox mode
+client = AgentShareClient(mode="local")
+
+# Agent A (Research) - Mints token for a massive state payload
+state_payload = {"summary": "Deep-dive analysis...", "data": [1, 2, 3, 4, 5]}
+token = client.mint_pathway_token(payload=state_payload, framework="python")
+print(f"Token: agnt.sr/{token}") 
+
+# Agent B (Writer) - Resolves only the keys it needs
+resolved = client.resolve_pathway_token(token, keys=["summary"])
+print(resolved['state'])
+```
+
+## 🛠️ Framework Integrations
+
+### LangChain Integration
+```python
+from agentshare.integrations import AgentShareCallbackHandler
+
+# 1-Line RunnableConfig integration
+handler = AgentShareCallbackHandler(ttl_seconds=3600)
+chain.invoke(input_data, config={"callbacks": [handler]})
+```
+
+### Universal MCP Server (Claude Desktop & Cursor)
+```bash
+# Run stdio FastMCP server
+python -m agentshare.integrations.mcp_server
+```
+
+---
+
+## 🔒 Security & Inviolable Laws
+
+1. **Law 1: The Server is Blind (Zero-Trust Transport):** The backend server NEVER parses or inspects payload bytes. Uploads and downloads use direct S3/R2 presigned URLs.
+2. **Law 2: The Token is the Truth:** Pathway Tokens carry mandatory SHA-256 integrity checksums, TTL expiration window, scope rules, and cryptographic signatures.
+3. **Law 3: Zero-Friction Adoption:** Integrations defensively swallow callback exceptions to ensure 0% impact on production agent executions.
+
+---
+
+## License
+
+[MIT](LICENSE) © Deepak V & Agntshare Contributors
