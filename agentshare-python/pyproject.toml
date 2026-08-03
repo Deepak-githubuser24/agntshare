@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agentshare"
+name = "agntshare"
 version = "0.1.0"
 description = "HTTPS for AI Agent State. Lightweight, cryptographically verified Pathway Tokens to eliminate context bloat."
 readme = "README.md"
@@ -30,3 +30,4 @@ mcp = ["mcp>=0.1.0"]
 Homepage = "https://agnt.sr"
 Repository = "https://github.com/agntshare/agentshare-python"
 "Bug Tracker" = "https://github.com/agntshare/agentshare-python/issues"
+

@@ -1,7 +1,28 @@
+Metadata-Version: 2.4
+Name: agntshare
+Version: 0.1.0
+Summary: HTTPS for AI Agent State. Lightweight, cryptographically verified Pathway Tokens to eliminate context bloat.
+Author-email: Deepak V <founders@agnt.sr>
+License: MIT
+Project-URL: Homepage, https://agnt.sr
+Project-URL: Repository, https://github.com/agntshare/agentshare-python
+Project-URL: Bug Tracker, https://github.com/agntshare/agentshare-python/issues
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Provides-Extra: mcp
+Requires-Dist: mcp>=0.1.0; extra == "mcp"
+
 # Agntshare (agnt.sr)
 **HTTPS for AI Agent State.**
 
-[![PyPI version](https://badge.fury.io/py/agntshare.svg)](https://badge.fury.io/py/agntshare)
+[![PyPI version](https://badge.fury.io/py/agentshare.svg)](https://badge.fury.io/py/agentshare)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Today, AI agents hand off tasks by stuffing 100k+ tokens of raw memory into prompt windows. It’s slow, expensive, and degrades context. 
@@ -12,12 +33,7 @@ Agntshare replaces raw context with a cryptographically verified **"coat-check t
 
 Install the zero-dependency SDK:
 ```bash
-pip install agntshare
-```
-
-With MCP server support:
-```bash
-pip install "agntshare[mcp]"
+pip install agentshare
 ```
 
 **Zero-Friction Local Handoff (No API Keys Required):**
