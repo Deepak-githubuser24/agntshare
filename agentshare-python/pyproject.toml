@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "Deepak V", email = "founders@agnt.sr"}
+    {name = "Deepak V", email = "techbit.ai.bytes@gmail.com"}
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -28,6 +28,5 @@ mcp = ["mcp>=0.1.0"]
 
 [project.urls]
 Homepage = "https://agnt.sr"
-Repository = "https://github.com/agntshare/agentshare-python"
-"Bug Tracker" = "https://github.com/agntshare/agentshare-python/issues"
-
+Repository = "https://github.com/Deepak-githubuser24/agntshare"
+"Bug Tracker" = "https://github.com/Deepak-githubuser24/agntshare/issues"

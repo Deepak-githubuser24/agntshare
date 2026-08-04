@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       [parsed.data.email]
     );
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

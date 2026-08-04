@@ -191,7 +191,7 @@ export default function QuickstartPage() {
           <li className="flex items-start gap-2">
             <span className="text-[#5EEAD4] font-bold">✓</span>
             <div>
-              <strong className="text-[#EDEAE3]">Selective Retrieval:</strong> Request specific keys (e.g. <code className="text-[#5EEAD4]">keys: ['summary']</code>) or dot paths (<code className="text-[#5EEAD4]">path: 'memory.db'</code>) to prevent prompt token bloat.
+              <strong className="text-[#EDEAE3]">Selective Retrieval:</strong> Request specific keys (e.g. <code className="text-[#5EEAD4]">keys: [&quot;summary&quot;]</code>) or dot paths (<code className="text-[#5EEAD4]">path: &quot;memory.db&quot;</code>) to prevent prompt token bloat.
             </div>
           </li>
           <li className="flex items-start gap-2">

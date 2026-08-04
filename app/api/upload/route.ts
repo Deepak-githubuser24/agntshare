@@ -91,8 +91,9 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ assetId: asset.id, uploadUrl });
-  } catch (err: any) {
-    const isDbError = err?.code === 'ECONNREFUSED' || err?.message?.includes('connect ECONNREFUSED');
+  } catch (err: unknown) {
+    const errorObj = err as { code?: string; message?: string };
+    const isDbError = errorObj?.code === 'ECONNREFUSED' || errorObj?.message?.includes('connect ECONNREFUSED');
     if (isDbError) {
       return NextResponse.json(
         { error: "database_unavailable", message: "Failed to connect to PostgreSQL database on port 5432. Please ensure PostgreSQL is running." },

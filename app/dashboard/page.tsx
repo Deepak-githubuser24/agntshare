@@ -11,7 +11,7 @@ export default async function DashboardPage() {
 
   const userId = session.user.id;
 
-  const logs = await query<{ event_type: string; metadata: any; created_at: Date }>(
+  const logs = await query<{ event_type: string; metadata: Record<string, unknown>; created_at: Date }>(
     `SELECT event_type, metadata, created_at FROM audit_logs 
      WHERE actor_user_id = $1 
      ORDER BY created_at DESC LIMIT 10`,

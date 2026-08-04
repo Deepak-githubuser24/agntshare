@@ -51,8 +51,9 @@ export async function getUploadUrl(key: string, contentType: string) {
       ContentType: contentType,
     });
     return await getSignedUrl(s3, command, { expiresIn: 300 });
-  } catch (err: any) {
-    throw new Error(`S3 Presigner Error: ${err?.message || err}`);
+  } catch (err: unknown) {
+    const errorObj = err as { message?: string };
+    throw new Error(`S3 Presigner Error: ${errorObj?.message || String(err)}`);
   }
 }
 
@@ -69,7 +70,8 @@ export async function getDownloadUrl(key: string, expiresInSeconds = 300) {
       Key: key,
     });
     return await getSignedUrl(s3, command, { expiresIn: expiresInSeconds });
-  } catch (err: any) {
-    throw new Error(`S3 Presigner Error: ${err?.message || err}`);
+  } catch (err: unknown) {
+    const errorObj = err as { message?: string };
+    throw new Error(`S3 Presigner Error: ${errorObj?.message || String(err)}`);
   }
 }
