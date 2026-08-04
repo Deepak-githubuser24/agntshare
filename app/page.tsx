@@ -159,9 +159,9 @@ export default function LandingPage() {
                   <div className="space-y-1.5">
                     <div><span className="text-zinc-500">$</span> <span className="text-zinc-200">npm install @agentshare/client</span></div>
                     <div className="pt-3"><span className="text-blue-400">import</span> <span className="text-zinc-200">{"{ client }"}</span> <span className="text-blue-400">from</span> <span className="json-string">&quot;@agentshare/client&quot;</span>;</div>
-                    <div className="pt-3 text-zinc-500">// Mint a token (Agent A)</div>
+                    <div className="pt-3 text-zinc-500">{"// Mint a token (Agent A)"}</div>
                     <div><span className="text-blue-400">const</span> <span className="text-zinc-200">token</span> <span className="text-zinc-500">=</span> <span className="text-zinc-200">await client</span>.<span className="text-yellow-300">mint</span>({"{ "}<span className="text-sky-300">state</span>: agentMemory, <span className="text-sky-300">ttl</span>: <span className="json-string">&quot;24h&quot;</span>{" }"});</div>
-                    <div className="pt-3 text-zinc-500">// Resolve instantly (Agent B)</div>
+                    <div className="pt-3 text-zinc-500">{"// Resolve instantly (Agent B)"}</div>
                     <div><span className="text-blue-400">const</span> <span className="text-zinc-200">state</span> <span className="text-zinc-500">=</span> <span className="text-zinc-200">await client</span>.<span className="text-yellow-300">resolve</span>(<span className="json-string">&quot;agnt.sr/3r98h3q&quot;</span>, {"{ "}<span className="text-sky-300">keys</span>: [<span className="json-string">&quot;summary&quot;</span>]{" }"});</div>
                   </div>
                 )}
