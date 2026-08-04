@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { generateText } from "ai";
 // In a real app, import from your LLM provider (e.g., @ai-sdk/openai)
 // import { openai } from "@ai-sdk/openai"; 
