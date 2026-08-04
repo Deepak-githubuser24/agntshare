@@ -23,6 +23,16 @@ Agntshare replaces raw context stuffing with a lightweight, cryptographically ve
 
 ---
 
+## 📚 Documentation & Architecture RFCs
+
+Dive deep into the structural engineering, economic models, and cryptographic security behind the Agntshare protocol:
+
+* [**💡 Why Agntshare?**](docs/why_agntshare.md) — Understanding context bloat, the compounding economics of raw payload stuffing, and our vision for universal portable state.
+* [**🛡️ Zero-Trust Security & Governance**](docs/security.md) — Deep dive into the Blind Pipe Architecture, client-side SHA-256 cryptographic checksums, data sovereignty, and immutable audit logging.
+* [**📊 Engineering Benchmarks & Methodology**](docs/benchmarks.md) — Transparent mathematical breakdowns on how Agntshare achieves ~200ms latency and <$0.001 cost per handoff versus standard inference API context limits.
+
+---
+
 ## 🚀 5-Minute Quick Start
 
 ### Install via PyPI or npm
