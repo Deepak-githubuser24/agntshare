@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       );
     }
     return NextResponse.json(
-      { error: "internal_server_error", message: err?.message ?? "An unexpected error occurred." },
+      { error: "internal_server_error", message: errorObj?.message ?? "An unexpected error occurred." },
       { status: 500 }
     );
   }
