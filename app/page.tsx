@@ -39,14 +39,14 @@ export default function LandingPage() {
 
   const copyQuickstart = useCallback(() => {
     const text = qsTab === "python"
-      ? `pip install agentshare\n\nfrom agentshare import client\n\ntoken = client.mint(state=agent_memory, ttl="24h")\nstate = client.resolve("agnt.sr/3r98h3q", keys=["summary"])`
-      : `npm install @agentshare/client\n\nimport { client } from "@agentshare/client";\n\nconst token = await client.mint({ state: agentMemory, ttl: "24h" });\nconst state = await client.resolve("agnt.sr/3r98h3q", { keys: ["summary"] });`;
+      ? `import agntshare\n\ntoken = agntshare.mint(state=agent_memory, ttl="24h")\nstate = agntshare.resolve("agnt.sr/x97b", keys=["summary"])`
+      : `import agntshare from "agntshare";\n\nconst token = await agntshare.mint({ state: agentMemory, ttl: "24h" });\nconst state = await agntshare.resolve("agnt.sr/x97b", { keys: ["summary"] });`;
     navigator.clipboard.writeText(text);
     showToast("Code copied to clipboard");
   }, [qsTab, showToast]);
 
   const copyProtocol = useCallback(() => {
-    navigator.clipboard.writeText("agnt.sr/3r98h3q");
+    navigator.clipboard.writeText("agnt.sr/x97b");
     showToast("Protocol ID copied");
   }, [showToast]);
 
@@ -109,13 +109,49 @@ export default function LandingPage() {
             <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight mb-8 leading-[0.9] text-white">
               HTTPS for <span className="text-zinc-500">AI Agent State.</span>
             </h1>
-            <p className="text-lg md:text-xl text-zinc-400 mb-10 leading-relaxed max-w-2xl mx-auto">
-              Today, agents hand off tasks by stuffing 100k+ tokens of raw memory into prompt windows.
-              It&apos;s slow, expensive, and degrades context. Agntshare replaces raw context with a
-              cryptographically verified &quot;coat-check ticket.&quot; Pass the token, not the bloat.
+            <p className="text-lg md:text-2xl text-zinc-300 font-medium mb-10 leading-relaxed max-w-3xl mx-auto">
+              Pass a cryptographically secure 28-byte token between agents instead of stuffing 50MB raw JSON payloads into prompt windows.
             </p>
+
+            {/* Highly Styled 3-Line Quickstart Box */}
+            <div className="w-full max-w-3xl mx-auto mb-10">
+              <div className="subpixel-border rounded-2xl bg-[#0c0c0e]/90 backdrop-blur-2xl overflow-hidden shadow-2xl shadow-black/60 border border-white/10 text-left">
+                <div className="h-11 border-b border-white/10 bg-white/[0.02] flex items-center px-4 justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
+                    <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+                    <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => setQsTab("python")} className={`qs-tab ${qsTab === "python" ? "active bg-white/10 text-white font-bold" : "text-zinc-500 hover:text-zinc-300"} px-3 py-1 rounded-md text-[12px] font-semibold mono transition-all`}>Python</button>
+                    <button onClick={() => setQsTab("typescript")} className={`qs-tab ${qsTab === "typescript" ? "active bg-white/10 text-white font-bold" : "text-zinc-500 hover:text-zinc-300"} px-3 py-1 rounded-md text-[12px] font-semibold mono transition-all`}>TypeScript</button>
+                  </div>
+                  <button onClick={copyQuickstart} className="text-[11px] font-bold text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-md border border-white/5">
+                    Copy
+                    {/* @ts-expect-error iconify-icon is a web component */}
+                    <iconify-icon icon="lucide:copy" className="text-xs" />
+                  </button>
+                </div>
+                <div className="p-6 mono text-[13px] sm:text-[14px] leading-relaxed overflow-x-auto no-scrollbar bg-[#0c0c0e]">
+                  {qsTab === "python" ? (
+                    <div className="space-y-2 text-zinc-200">
+                      <div><span className="text-blue-400">import</span> <span className="text-zinc-100">agntshare</span></div>
+                      <div className="pt-2"><span className="text-zinc-100">token</span> <span className="text-zinc-500">=</span> <span className="text-zinc-100">agntshare</span>.<span className="text-yellow-300 font-semibold">mint</span>(<span className="text-sky-300">state</span>=<span className="text-zinc-200">agent_memory</span>, <span className="text-sky-300">ttl</span>=<span className="json-string">&quot;24h&quot;</span>)</div>
+                      <div><span className="text-zinc-100">state</span> <span className="text-zinc-500">=</span> <span className="text-zinc-100">agntshare</span>.<span className="text-yellow-300 font-semibold">resolve</span>(<span className="json-string">&quot;agnt.sr/x97b&quot;</span>, <span className="text-sky-300">keys</span>=[<span className="json-string">&quot;summary&quot;</span>])</div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 text-zinc-200">
+                      <div><span className="text-blue-400">import</span> <span className="text-zinc-100">agntshare</span> <span className="text-blue-400">from</span> <span className="json-string">&quot;agntshare&quot;</span>;</div>
+                      <div className="pt-2"><span className="text-blue-400">const</span> <span className="text-zinc-100">token</span> <span className="text-zinc-500">=</span> <span className="text-zinc-100">await agntshare</span>.<span className="text-yellow-300 font-semibold">mint</span>({"{ "}<span className="text-sky-300">state</span>: agentMemory, <span className="text-sky-300">ttl</span>: <span className="json-string">&quot;24h&quot;</span>{" }"});</div>
+                      <div><span className="text-blue-400">const</span> <span className="text-zinc-100">state</span> <span className="text-zinc-500">=</span> <span className="text-zinc-100">await agntshare</span>.<span className="text-yellow-300 font-semibold">resolve</span>(<span className="json-string">&quot;agnt.sr/x97b&quot;</span>, {"{ "}<span className="text-sky-300">keys</span>: [<span className="json-string">&quot;summary&quot;</span>]{" }"});</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/login" className="bg-white text-black px-8 py-3.5 rounded-xl font-bold text-[15px] flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all">
+              <Link href="/login" className="bg-white text-black px-8 py-3.5 rounded-xl font-bold text-[15px] flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-white/10">
                 Get API Key (Private Beta)
                 {/* @ts-expect-error iconify-icon is a web component */}
                 <iconify-icon icon="lucide:arrow-right" className="text-lg" />
@@ -126,61 +162,64 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* Quickstart */}
-          <section className="mt-32 w-full max-w-3xl mx-auto relative animate-reveal" style={{ animationDelay: "0.1s" }}>
-            <div className="subpixel-border rounded-2xl bg-[#0c0c0e]/80 backdrop-blur-2xl overflow-hidden shadow-2xl shadow-black/50">
-              <div className="h-12 border-b border-white/5 flex items-center px-4 justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[#ff5f56]" />
-                  <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
-                  <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
+          {/* Interactive Explorer & Visual Flow Schematic */}
+          <section className="mt-36 w-full relative animate-reveal" style={{ animationDelay: "0.2s" }}>
+            {/* Visual Flow Diagram: Sleek Engineering Schematic */}
+            <div className="mb-12 w-full max-w-5xl mx-auto">
+              <div className="subpixel-border rounded-xl bg-black/60 border border-white/10 p-6 md:p-8 backdrop-blur-xl shadow-2xl">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-[11px] mono font-bold text-zinc-400 uppercase tracking-widest mb-8 pb-4 border-b border-white/5 gap-2">
+                  <span className="flex items-center gap-2 text-white">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+                    Protocol Transport Architecture
+                  </span>
+                  <span className="text-zinc-500">LATENCY: 4MS • OVERHEAD: 28 BYTES</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => setQsTab("python")} className={`qs-tab ${qsTab === "python" ? "active" : ""} px-3 py-1 rounded-md text-[12px] font-semibold mono transition-colors`}>Python</button>
-                  <button onClick={() => setQsTab("typescript")} className={`qs-tab ${qsTab === "typescript" ? "active" : ""} px-3 py-1 rounded-md text-[12px] font-semibold mono transition-colors`}>TypeScript</button>
-                </div>
-                <button onClick={copyQuickstart} className="text-[11px] font-bold text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5">
-                  Copy
-                  {/* @ts-expect-error iconify-icon is a web component */}
-                  <iconify-icon icon="lucide:copy" className="text-sm" />
-                </button>
-              </div>
-              <div className="p-6 mono text-[13px] leading-relaxed overflow-x-auto no-scrollbar">
-                {qsTab === "python" ? (
-                  <div className="space-y-1.5">
-                    <div><span className="text-zinc-500">$</span> <span className="text-zinc-200">pip install agentshare</span></div>
-                    <div className="pt-3"><span className="text-blue-400">from</span> <span className="text-zinc-200">agentshare</span> <span className="text-blue-400">import</span> <span className="text-zinc-200">client</span></div>
-                    <div className="pt-3 text-zinc-500"># Mint a token (Agent A)</div>
-                    <div><span className="text-zinc-200">token</span> <span className="text-zinc-500">=</span> <span className="text-zinc-200">client</span>.<span className="text-yellow-300">mint</span>(<span className="text-sky-300">state</span>=<span className="text-zinc-200">agent_memory</span>, <span className="text-sky-300">ttl</span>=<span className="json-string">&quot;24h&quot;</span>)</div>
-                    <div className="pt-3 text-zinc-500"># Resolve instantly (Agent B)</div>
-                    <div><span className="text-zinc-200">state</span> <span className="text-zinc-500">=</span> <span className="text-zinc-200">client</span>.<span className="text-yellow-300">resolve</span>(<span className="json-string">&quot;agnt.sr/3r98h3q&quot;</span>, <span className="text-sky-300">keys</span>=[<span className="json-string">&quot;summary&quot;</span>])</div>
+                <div className="grid grid-cols-1 md:grid-cols-7 gap-4 items-center justify-center text-center mono">
+                  {/* Step 1: Upload */}
+                  <div className="md:col-span-1 p-4 rounded-xl border border-white/10 bg-white/[0.02] flex flex-col items-center gap-2.5 hover:bg-white/[0.04] transition-all">
+                    {/* @ts-expect-error iconify-icon is a web component */}
+                    <iconify-icon icon="lucide:upload-cloud" className="text-2xl text-zinc-300" />
+                    <span className="text-[13px] font-bold text-zinc-200">Upload</span>
+                    <span className="text-[10px] text-zinc-500">S3 Presigned URL</span>
                   </div>
-                ) : (
-                  <div className="space-y-1.5">
-                    <div><span className="text-zinc-500">$</span> <span className="text-zinc-200">npm install @agentshare/client</span></div>
-                    <div className="pt-3"><span className="text-blue-400">import</span> <span className="text-zinc-200">{"{ client }"}</span> <span className="text-blue-400">from</span> <span className="json-string">&quot;@agentshare/client&quot;</span>;</div>
-                    <div className="pt-3 text-zinc-500">{"// Mint a token (Agent A)"}</div>
-                    <div><span className="text-blue-400">const</span> <span className="text-zinc-200">token</span> <span className="text-zinc-500">=</span> <span className="text-zinc-200">await client</span>.<span className="text-yellow-300">mint</span>({"{ "}<span className="text-sky-300">state</span>: agentMemory, <span className="text-sky-300">ttl</span>: <span className="json-string">&quot;24h&quot;</span>{" }"});</div>
-                    <div className="pt-3 text-zinc-500">{"// Resolve instantly (Agent B)"}</div>
-                    <div><span className="text-blue-400">const</span> <span className="text-zinc-200">state</span> <span className="text-zinc-500">=</span> <span className="text-zinc-200">await client</span>.<span className="text-yellow-300">resolve</span>(<span className="json-string">&quot;agnt.sr/3r98h3q&quot;</span>, {"{ "}<span className="text-sky-300">keys</span>: [<span className="json-string">&quot;summary&quot;</span>]{" }"});</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
 
-          {/* Interactive Explorer */}
-          <section className="mt-44 w-full relative animate-reveal" style={{ animationDelay: "0.2s" }}>
-            {/* Flow Diagram */}
-            <div className="mb-10 flex justify-center">
-              <div className="mono text-[11px] md:text-[13px] text-zinc-500 flex flex-wrap items-center justify-center gap-2 text-center">
-                <span className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.03] text-zinc-300">[ 120k Token Context ]</span>
-                <span className="text-zinc-600">──(Client Compression)──&gt;</span>
-                <span className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.03] text-zinc-300">[ agnt.sr/3r98h3q ]</span>
-                <span className="text-zinc-600">──(Zero-Trust Transfer)──&gt;</span>
-                <span className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.03] text-zinc-300">[ Target Agent ]</span>
+                  {/* Arrow 1 */}
+                  <div className="hidden md:flex flex-col items-center justify-center text-zinc-600">
+                    <span className="text-[10px] uppercase text-zinc-500 font-semibold mb-1 tracking-wider">SHA-256</span>
+                    <span className="text-emerald-400 font-mono text-lg tracking-tighter">─────&gt;</span>
+                  </div>
+
+                  {/* Step 2: Mint Token */}
+                  <div className="md:col-span-2 p-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 flex flex-col items-center gap-2.5 shadow-xl shadow-emerald-500/5 hover:border-emerald-500/60 transition-all">
+                    <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold uppercase tracking-wide">
+                      {/* @ts-expect-error iconify-icon is a web component */}
+                      <iconify-icon icon="lucide:key" className="text-sm" />
+                      Mint Token
+                    </div>
+                    <span className="text-xs sm:text-sm font-black tracking-tight text-white bg-black/80 px-3.5 py-1.5 rounded-lg border border-emerald-500/30 shadow-inner">agnt.sr/x97b</span>
+                    <span className="text-[11px] text-emerald-300 font-medium">28-Byte Scoped Reference</span>
+                  </div>
+
+                  {/* Arrow 2 */}
+                  <div className="hidden md:flex flex-col items-center justify-center text-zinc-600">
+                    <span className="text-[10px] uppercase text-zinc-500 font-semibold mb-1 tracking-wider">Handoff</span>
+                    <span className="text-emerald-400 font-mono text-lg tracking-tighter">─────&gt;</span>
+                  </div>
+
+                  {/* Step 3: Resolve & Stream */}
+                  <div className="md:col-span-2 p-4 rounded-xl border border-white/10 bg-white/[0.02] flex flex-col items-center gap-2.5 hover:bg-white/[0.04] transition-all">
+                    <div className="flex items-center gap-2 text-zinc-200 text-xs font-bold uppercase tracking-wide">
+                      {/* @ts-expect-error iconify-icon is a web component */}
+                      <iconify-icon icon="lucide:download-cloud" className="text-blue-400 text-base" />
+                      Resolve &amp; Stream
+                    </div>
+                    <span className="text-[12px] text-zinc-300 font-semibold">Byte-range capable</span>
+                    <span className="text-[10px] text-zinc-500">Target Agent Memory</span>
+                  </div>
+                </div>
               </div>
             </div>
+
             {/* Decorative Glows */}
             <div className="absolute -top-20 -left-20 w-80 h-80 bg-blue-500/10 rounded-full blur-[120px]" />
             <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-zinc-500/10 rounded-full blur-[120px]" />
@@ -197,7 +236,7 @@ export default function LandingPage() {
                   <div className="max-w-md w-full h-7 bg-white/5 rounded-md border border-white/5 flex items-center px-3 gap-2">
                     {/* @ts-expect-error iconify-icon is a web component */}
                     <iconify-icon icon="lucide:lock" className="text-zinc-500 text-xs" />
-                    <span className="text-xs mono text-zinc-400">agnt.sr/3r98h3q</span>
+                    <span className="text-xs mono text-zinc-400">agnt.sr/x97b</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -280,7 +319,7 @@ export default function LandingPage() {
                   <div className="flex-1 p-6 mono text-[13px] leading-relaxed overflow-x-auto no-scrollbar">
                     <div className="space-y-1">
                       <div><span className="text-zinc-500">{"{"}</span></div>
-                      <div className={`pl-6 ${jsonNodeClass("all")}`}><span className="json-key">&quot;id&quot;</span>: <span className="json-string">&quot;agnt_3r98h3q&quot;</span>,</div>
+                      <div className={`pl-6 ${jsonNodeClass("all")}`}><span className="json-key">&quot;id&quot;</span>: <span className="json-string">&quot;agnt_x97b&quot;</span>,</div>
                       <div className={`pl-6 ${jsonNodeClass("all")}`}><span className="json-key">&quot;object&quot;</span>: <span className="json-string">&quot;pathway_token&quot;</span>,</div>
                       <div className={`pl-6 ${jsonNodeClass("all")}`}><span className="json-key">&quot;metadata&quot;</span>: <span className="text-zinc-500">{"{"}</span></div>
                       <div className={`pl-12 ${jsonNodeClass("all")}`}><span className="json-key">&quot;source_agent&quot;</span>: <span className="json-string">&quot;ResearchAgent_v4&quot;</span>,</div>
@@ -323,68 +362,87 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* Architecture */}
-          <section className="mt-48 w-full animate-reveal" style={{ animationDelay: "0.4s" }}>
-            <div className="flex flex-col items-center text-center mb-20">
-              <h2 className="text-4xl font-extrabold tracking-tight mb-4">The Blind Pipe Architecture.</h2>
-              <p className="text-zinc-500 max-w-xl">Privacy-first infrastructure that decouples your agent&apos;s state from the underlying LLM context window.</p>
+          {/* Enterprise Trust Block: Zero Trust Architecture Bento Grid */}
+          <section className="mt-44 w-full animate-reveal" style={{ animationDelay: "0.4s" }}>
+            <div className="flex flex-col items-center text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[11px] font-bold tracking-widest uppercase mb-4 text-emerald-400">
+                Enterprise Trust &amp; Security
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-4 text-white">Zero Trust Architecture.</h2>
+              <p className="text-zinc-400 text-base md:text-lg max-w-2xl">Privacy-first infrastructure that decouples your agent&apos;s state from the underlying LLM context window.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Bento 1 */}
-              <div className="bento-card rounded-2xl p-8 flex flex-col gap-12 relative overflow-hidden group">
+              {/* Bento 1: Local-first hashing */}
+              <div className="bento-card rounded-2xl p-8 flex flex-col gap-10 relative overflow-hidden group border border-white/10 bg-[#0c0c0e]/90 hover:border-white/20 transition-all">
                 <div className="absolute top-0 right-0 p-8 text-white/5 group-hover:text-white/10 transition-colors duration-300">
                   {/* @ts-expect-error iconify-icon is a web component */}
-                  <iconify-icon icon="lucide:cpu" className="text-6xl" />
+                  <iconify-icon icon="lucide:hash" className="text-7xl" />
                 </div>
                 <div className="space-y-4 z-10">
-                  <h3 className="text-xl font-bold">Stateless by Design</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">Our backend never buffers your payload. The SDK orchestrates secure S3 presigned URLs, meaning the protocol scales infinitely without touching your compute.</p>
-                </div>
-                <div className="mt-auto glow-code mono text-[10px] text-zinc-400 border border-blue-500/20">
-                  $ GET /protocol/presign<br />$ STATUS 200 OK<br />$ PAYLOAD_URL: amzn.s3.direct/...
-                </div>
-              </div>
-              {/* Bento 2 */}
-              <div className="bento-card rounded-2xl p-8 flex flex-col gap-12 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-8 text-white/5 group-hover:text-white/10 transition-colors duration-300">
-                  {/* @ts-expect-error iconify-icon is a web component */}
-                  <iconify-icon icon="lucide:shield-check" className="text-6xl" />
-                </div>
-                <div className="space-y-4 z-10">
-                  <h3 className="text-xl font-bold">Zero-Trust Provenance</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">Every token is cryptographically signed. Client-side SHA-256 hashing ensures data integrity is mathematically verified before the receiving agent processes the state.</p>
-                </div>
-                <div className="mt-auto flex flex-col gap-2">
-                  <div className="flex items-center justify-between px-3 py-2 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] mono text-emerald-400">
-                    <span>SIGNATURE_VALID</span>
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-2">
                     {/* @ts-expect-error iconify-icon is a web component */}
-                    <iconify-icon icon="lucide:check" />
+                    <iconify-icon icon="lucide:shield-check" className="text-xl" />
                   </div>
-                  <div className="flex items-center justify-between px-3 py-2 rounded bg-white/5 border border-white/10 text-[10px] mono text-zinc-500">
-                    <span>HASH: 8f2b...3a1c</span>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">Local-first hashing</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">Client-side checksum computation before transport. Every token is cryptographically signed and SHA-256 hashed locally in our SDK before leaving your infrastructure, ensuring data integrity is mathematically verified without server liability.</p>
+                </div>
+                <div className="mt-auto flex flex-col gap-2 z-10">
+                  <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] mono text-emerald-400 font-bold">
+                    <span>CHECKSUM_VERIFIED</span>
+                    {/* @ts-expect-error iconify-icon is a web component */}
+                    <iconify-icon icon="lucide:check-circle" />
+                  </div>
+                  <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[11px] mono text-zinc-400">
+                    <span>SHA256: e3b0c4...a1b2</span>
                   </div>
                 </div>
               </div>
-              {/* Bento 3 */}
-              <div className="bento-card rounded-2xl p-8 flex flex-col gap-12 relative overflow-hidden group">
+
+              {/* Bento 2: Zero raw bytes read by the protocol */}
+              <div className="bento-card rounded-2xl p-8 flex flex-col gap-10 relative overflow-hidden group border border-white/10 bg-[#0c0c0e]/90 hover:border-white/20 transition-all">
                 <div className="absolute top-0 right-0 p-8 text-white/5 group-hover:text-white/10 transition-colors duration-300">
                   {/* @ts-expect-error iconify-icon is a web component */}
-                  <iconify-icon icon="lucide:layers" className="text-6xl" />
+                  <iconify-icon icon="lucide:eye-off" className="text-7xl" />
                 </div>
                 <div className="space-y-4 z-10">
-                  <h3 className="text-xl font-bold">Framework Agnostic</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">Whether you&apos;re running local Python scripts, enterprise LangGraph workflows, or autonomous CrewAI fleets, Agntshare works as a standard sidecar.</p>
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-2">
+                    {/* @ts-expect-error iconify-icon is a web component */}
+                    <iconify-icon icon="lucide:lock" className="text-xl" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">Zero raw bytes read by the protocol</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">Our backend stays a dumb, opaque, stateless pipe. By orchestrating secure S3 presigned streaming URLs, our servers never inspect, store, or buffer your file payload bytes—scaling infinitely with a minimal compliance surface.</p>
                 </div>
-                <div className="mt-auto grid grid-cols-2 gap-2">
+                <div className="mt-auto glow-code mono text-[11px] text-zinc-400 border border-blue-500/20 bg-blue-950/10 p-3.5 rounded-lg z-10 leading-relaxed">
+                  <span className="text-zinc-500">$</span> GET /api/resolve/x97b<br />
+                  <span className="text-zinc-500">$</span> STATUS: <span className="text-emerald-400 font-bold">200 OK</span><br />
+                  <span className="text-zinc-500">$</span> STREAM_URL: <span className="text-blue-300">amzn.s3.direct/...</span>
+                </div>
+              </div>
+
+              {/* Bento 3: Storage stays in the user's bucket */}
+              <div className="bento-card rounded-2xl p-8 flex flex-col gap-10 relative overflow-hidden group border border-white/10 bg-[#0c0c0e]/90 hover:border-white/20 transition-all">
+                <div className="absolute top-0 right-0 p-8 text-white/5 group-hover:text-white/10 transition-colors duration-300">
+                  {/* @ts-expect-error iconify-icon is a web component */}
+                  <iconify-icon icon="lucide:database" className="text-7xl" />
+                </div>
+                <div className="space-y-4 z-10">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-2">
+                    {/* @ts-expect-error iconify-icon is a web component */}
+                    <iconify-icon icon="lucide:server" className="text-xl" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">Storage stays in the user&apos;s bucket</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">Total enterprise data governance. Assets remain safely isolated within your organization&apos;s configured S3 or compatible object storage. You retain sovereign control over physical data boundaries, encryption keys, and retention TTLs.</p>
+                </div>
+                <div className="mt-auto grid grid-cols-2 gap-2 z-10">
                   {[
-                    { icon: "logos:python", label: "SDK" },
-                    { icon: "lucide:box", label: "LangChain", color: "text-blue-400" },
-                    { icon: "lucide:users", label: "CrewAI", color: "text-orange-400" },
-                    { icon: "lucide:globe", label: "MCP", color: "text-zinc-500" },
+                    { icon: "logos:aws-s3", label: "AWS S3" },
+                    { icon: "lucide:cloud", label: "Cloudflare R2", color: "text-orange-400" },
+                    { icon: "lucide:hard-drive", label: "MinIO", color: "text-red-400" },
+                    { icon: "lucide:shield", label: "Vercel Blob", color: "text-white" },
                   ].map((item) => (
-                    <div key={item.label} className="flex items-center gap-2 px-3 py-2 rounded bg-white/5 border border-white/10 text-[11px] font-medium text-zinc-300">
+                    <div key={item.label} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[11px] font-medium text-zinc-300">
                       {/* @ts-expect-error iconify-icon is a web component */}
-                      <iconify-icon icon={item.icon} className={`text-xs ${item.color || ""}`} />
+                      <iconify-icon icon={item.icon} className={`text-sm ${item.color || ""}`} />
                       {item.label}
                     </div>
                   ))}
@@ -394,93 +452,106 @@ export default function LandingPage() {
           </section>
 
           {/* Comparison Table */}
-          <section className="mt-48 w-full max-w-4xl animate-reveal" style={{ animationDelay: "0.5s" }}>
+          <section className="mt-44 w-full max-w-4xl animate-reveal" style={{ animationDelay: "0.5s" }}>
             <div className="flex flex-col items-center text-center mb-14">
               <h2 className="text-4xl font-extrabold tracking-tight mb-4">Engineered for Multi-Agent Systems.</h2>
-              <p className="text-zinc-500 max-w-xl">Why teams move off raw storage buckets once agent handoffs get past a prototype.</p>
+              <p className="text-zinc-400 text-base md:text-lg max-w-xl">Why teams move off raw storage buckets once agent handoffs scale beyond a prototype.</p>
             </div>
-            <div className="subpixel-border rounded-2xl overflow-hidden bg-white/[0.02]">
-              <div className="grid grid-cols-3 text-[12px] font-bold uppercase tracking-widest">
-                <div className="p-5 text-zinc-600 border-b border-r border-white/5" />
-                <div className="p-5 text-zinc-500 border-b border-r border-white/5">DIY S3 Buckets</div>
-                <div className="p-5 text-white border-b border-white/5 bg-emerald-500/5">Agntshare Protocol</div>
+            <div className="subpixel-border rounded-2xl overflow-hidden bg-white/[0.02] border border-white/10 shadow-2xl">
+              <div className="grid grid-cols-3 text-[12px] font-bold uppercase tracking-widest bg-white/[0.02]">
+                <div className="p-5 text-zinc-600 border-b border-r border-white/10" />
+                <div className="p-5 text-zinc-400 border-b border-r border-white/10 text-center sm:text-left">DIY S3 Buckets</div>
+                <div className="p-5 text-emerald-400 border-b border-white/10 bg-emerald-500/10 text-center sm:text-left font-black">Agntshare Protocol</div>
               </div>
               {[
-                ["TTL Enforcement", "Manual", "Native"],
-                ["Cross-Framework Parsing", "Build it yourself", "Automatic"],
-                ["Provenance Verification", "None", "Cryptographic Signatures"],
+                ["TTL Enforcement", "Manual script cron jobs", "Native automated TTLs"],
+                ["Cross-Framework Parsing", "Build custom adapters", "Automatic universal parsing"],
+                ["Provenance Verification", "None (blind trust)", "Cryptographic SHA-256 Signatures"],
               ].map(([feature, diy, agnt], i) => (
-                <div key={feature} className="grid grid-cols-3 text-sm">
-                  <div className={`p-5 border-r ${i < 2 ? "border-b" : ""} border-white/5 font-semibold text-zinc-300`}>{feature}</div>
-                  <div className={`p-5 border-r ${i < 2 ? "border-b" : ""} border-white/5 text-zinc-500`}>{diy}</div>
-                  <div className={`p-5 ${i < 2 ? "border-b" : ""} border-white/5 text-zinc-200 flex items-center gap-2`}>
+                <div key={feature} className="grid grid-cols-3 text-sm hover:bg-white/[0.01] transition-colors">
+                  <div className={`p-5 border-r ${i < 2 ? "border-b" : ""} border-white/10 font-bold text-zinc-200`}>{feature}</div>
+                  <div className={`p-5 border-r ${i < 2 ? "border-b" : ""} border-white/10 text-zinc-400 text-xs sm:text-sm`}>{diy}</div>
+                  <div className={`p-5 ${i < 2 ? "border-b" : ""} border-white/10 text-zinc-100 font-medium text-xs sm:text-sm flex items-center gap-2 bg-emerald-500/[0.02]`}>
                     {/* @ts-expect-error iconify-icon is a web component */}
-                    <iconify-icon icon="lucide:check" className="text-emerald-400" /> {agnt}
+                    <iconify-icon icon="lucide:check-circle-2" className="text-emerald-400 text-base shrink-0" /> {agnt}
                   </div>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* Why Now Manifesto */}
-          <section className="mt-48 w-full max-w-3xl mx-auto text-center animate-reveal">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight leading-[1.15] mb-6 text-white">
-              Multi-agent systems cannot scale on single-agent infrastructure.
+          {/* The "Why Now" Thesis */}
+          <section className="mt-44 w-full max-w-4xl mx-auto text-center animate-reveal">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[11px] font-bold tracking-widest uppercase mb-6 text-emerald-400 shadow-lg shadow-emerald-500/5">
+              The Why Now Thesis
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.15] mb-8 text-white">
+              Model context windows are exploding. <br className="hidden sm:inline" />
+              <span className="text-zinc-500">Raw payload handoffs are suffocating scaling.</span>
             </h2>
-            <p className="text-zinc-500 text-lg leading-[1.9]">
-              LLMs evolved from single-turn chatbots to multi-agent autonomous swarms. But the transport layer didn&apos;t.
-              Passing large contexts between agents today means serializing 100k+ tokens through an HTTP request,
-              suffering massive latency, and bleeding compute costs. Agntshare exists to unblock the agentic web.
-            </p>
+            <div className="p-8 md:p-10 rounded-2xl bg-gradient-to-b from-white/[0.04] to-transparent border border-white/10 shadow-2xl text-left sm:text-center">
+              <p className="text-zinc-300 text-lg md:text-xl leading-relaxed max-w-3xl mx-auto font-normal">
+                While LLM context windows are expanding past 1M+ tokens, relying on raw prompt windows to pass large files, multi-page PDFs, and complex execution memory between autonomous agents creates an architectural bottleneck. Moving megabytes of raw JSON across LLM inference network boundaries creates crippling multi-second latency and astronomical token costs per hop.
+              </p>
+              <p className="text-emerald-400 font-bold text-lg md:text-xl mt-6">
+                Compute is expensive; moving data through inference prompts is slow.
+              </p>
+              <p className="text-zinc-400 text-base md:text-lg mt-4 leading-relaxed max-w-2xl mx-auto">
+                Agntshare solves this by decoupling state from the context window—letting agents hand off lightweight 28-byte cryptographically verified tokens instead of raw bytes.
+              </p>
+            </div>
           </section>
 
           {/* Benchmarks */}
-          <section className="mt-48 w-full max-w-5xl animate-reveal">
-            <div className="flex flex-col items-center text-center mb-14">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[11px] font-bold tracking-widest uppercase mb-6 text-zinc-400">
+          <section className="mt-44 w-full max-w-5xl animate-reveal">
+            <div className="flex flex-col items-center text-center mb-16">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[11px] font-bold tracking-widest uppercase mb-4 text-zinc-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Benchmarked, not marketed
               </div>
-              <h2 className="text-4xl font-extrabold tracking-tight mb-4">Raw Handoff vs. Agntshare Protocol.</h2>
-              <p className="text-zinc-500 max-w-xl">Same payload, same agents, two transport strategies. The delta compounds with every hop.</p>
+              <h2 className="text-4xl font-extrabold tracking-tight mb-4 text-white">Raw Handoff vs. Agntshare Protocol.</h2>
+              <p className="text-zinc-400 text-base md:text-lg max-w-xl">Same 4.2MB payload, same agents, two transport strategies. The efficiency delta compounds exponentially with every hop.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 { label: "Latency / Hop", raw: "12.4s", agnt: "45ms", rawPct: 100, agntPct: 3 },
-                { label: "Payload Size", raw: "4.2 MB", agnt: "340 Bytes", rawPct: 100, agntPct: 2 },
-                { label: "Compute Cost", raw: "~$0.35", agnt: "$0.00", rawPct: 100, agntPct: 0, note: "Client-side, edge routed." },
+                { label: "Payload Size", raw: "4.2 MB", agnt: "28 Bytes", rawPct: 100, agntPct: 1 },
+                { label: "Compute Cost", raw: "~$0.35", agnt: "$0.00", rawPct: 100, agntPct: 0, note: "Client-side S3 presign, edge routed." },
               ].map((b) => (
-                <div key={b.label} className="bento-card rounded-2xl p-7">
-                  <div className="mono text-[11px] uppercase tracking-widest text-zinc-500 mb-6">{b.label}</div>
-                  <div className="mb-5">
+                <div key={b.label} className="bento-card rounded-2xl p-7 border border-white/10 bg-[#0c0c0e]/90 shadow-xl">
+                  <div className="mono text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-6 flex items-center justify-between">
+                    <span>{b.label}</span>
+                    <span className="text-emerald-400 text-xs">100x+ Better</span>
+                  </div>
+                  <div className="mb-6">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[13px] text-zinc-500">Raw Context Handoff</span>
-                      <span className="mono text-sm font-bold text-red-400">{b.raw}</span>
+                      <span className="text-[13px] text-zinc-400 font-medium">Raw Context Handoff</span>
+                      <span className="mono text-sm font-black text-red-400">{b.raw}</span>
                     </div>
-                    <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
-                      <div className="h-full rounded-full bg-red-500/70" style={{ width: `${b.rawPct}%` }} />
+                    <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden border border-white/5">
+                      <div className="h-full rounded-full bg-red-500/80" style={{ width: `${b.rawPct}%` }} />
                     </div>
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[13px] text-zinc-300">Agntshare Protocol</span>
-                      <span className="mono text-sm font-bold text-emerald-400">{b.agnt}</span>
+                      <span className="text-[13px] text-white font-bold">Agntshare Protocol</span>
+                      <span className="mono text-sm font-black text-emerald-400">{b.agnt}</span>
                     </div>
-                    <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
-                      <div className="h-full rounded-full bg-emerald-500" style={{ width: `${b.agntPct}%` }} />
+                    <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden border border-white/5">
+                      <div className="h-full rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" style={{ width: `${b.agntPct}%` }} />
                     </div>
                   </div>
-                  {b.note && <div className="mt-4 text-[11px] text-zinc-600">{b.note}</div>}
+                  {b.note && <div className="mt-5 text-[11px] font-semibold text-zinc-500 pt-3 border-t border-white/5">{b.note}</div>}
                 </div>
               ))}
             </div>
           </section>
 
           {/* Ecosystem Marquee */}
-          <section className="mt-48 w-full animate-reveal">
+          <section className="mt-44 w-full animate-reveal">
             <div className="flex flex-col items-center text-center mb-14 px-6">
-              <h2 className="text-4xl font-extrabold tracking-tight mb-4">The Universal Translator for Agentic State.</h2>
-              <p className="text-zinc-500 max-w-xl">Tokens resolve identically regardless of the originating stack.</p>
+              <h2 className="text-4xl font-extrabold tracking-tight mb-4 text-white">The Universal Translator for Agentic State.</h2>
+              <p className="text-zinc-400 text-base md:text-lg max-w-xl">Tokens resolve identically regardless of the originating framework or programming language.</p>
             </div>
             <div className="marquee-mask relative w-full overflow-hidden">
               <div className="marquee-track flex items-center gap-16 w-max">
@@ -496,10 +567,10 @@ export default function LandingPage() {
                       { icon: "simple-icons:typescript", name: "TypeScript" },
                       { icon: "simple-icons:go", name: "Go" },
                     ].map((item) => (
-                      <div key={`${set}-${item.name}`} className="logo-chip flex items-center gap-2.5">
+                      <div key={`${set}-${item.name}`} className="logo-chip flex items-center gap-3 bg-white/[0.03] border border-white/10 px-5 py-2.5 rounded-xl shadow-md">
                         {/* @ts-expect-error iconify-icon is a web component */}
-                        <iconify-icon icon={item.icon} className="text-2xl" />
-                        <span className="mono text-sm font-medium">{item.name}</span>
+                        <iconify-icon icon={item.icon} className="text-2xl text-zinc-300" />
+                        <span className="mono text-sm font-bold text-zinc-200">{item.name}</span>
                       </div>
                     ))}
                   </div>
@@ -508,13 +579,16 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* Social Proof */}
-          <section className="mt-48 w-full flex flex-col items-center text-center gap-6 animate-reveal">
-            <p className="text-zinc-400 text-lg tracking-wide">
-              Join <span className="text-white font-semibold">400+</span> teams building the agentic web.
+          {/* Social Proof & Final CTA */}
+          <section className="mt-44 w-full flex flex-col items-center text-center gap-8 animate-reveal">
+            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+              Ready to unblock multi-agent scaling?
+            </h2>
+            <p className="text-zinc-400 text-lg tracking-wide max-w-xl">
+              Join <span className="text-white font-bold underline decoration-emerald-500 decoration-2">400+</span> engineering teams building production AI workflows with Agntshare.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/login" className="bg-white text-black px-8 py-3.5 rounded-xl font-bold text-[15px] flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all">
+              <Link href="/login" className="bg-white text-black px-8 py-3.5 rounded-xl font-bold text-[15px] flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-white/10">
                 Get API Key (Private Beta)
                 {/* @ts-expect-error iconify-icon is a web component */}
                 <iconify-icon icon="lucide:arrow-right" className="text-lg" />
@@ -526,12 +600,12 @@ export default function LandingPage() {
           </section>
 
           {/* Footer */}
-          <footer className="mt-48 w-full border-t border-white/5 pt-12 pb-12 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
+          <footer className="mt-44 w-full border-t border-white/10 pt-12 pb-12 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-6">
             <div className="flex items-center gap-3">
               <span className="font-bold tracking-tighter mono text-white text-sm">AGNT.SR</span>
               <span>© 2026 Agntshare Protocol Standards</span>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-6 font-semibold">
               <a href="https://github.com/Deepak-githubuser24/agntshare" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
               <a href="https://pypi.org/project/agntshare/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">PyPI</a>
               <Link href="/docs" className="hover:text-white transition-colors">Docs</Link>
@@ -540,7 +614,7 @@ export default function LandingPage() {
           </footer>
 
           {/* Legal Disclosure */}
-          <footer className="w-full border-t border-white/5 py-8 text-center text-sm text-zinc-600">
+          <footer className="w-full border-t border-white/5 py-8 text-center text-xs sm:text-sm text-zinc-500 leading-relaxed">
             <div className="mx-auto max-w-4xl px-4">
               <p>AgentShare is currently in closed beta. We collect your email for login and store uploaded files securely in your configured object storage. Tokens and files are retained according to your configured expiration.</p>
               <p className="mt-2">A full Terms of Service and Privacy Policy will be published prior to public launch.</p>
