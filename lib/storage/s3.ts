@@ -32,9 +32,16 @@ export const s3 = new S3Client({
 });
 
 function getAppUrl(): string {
-  let appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://127.0.0.1:3000";
-  appUrl = appUrl.replace("localhost", "127.0.0.1");
-  return appUrl.replace(/\/+$/, "");
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/+$/, "").replace("localhost", "127.0.0.1");
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+  }
+  return "http://127.0.0.1:3000";
 }
 
 export async function getUploadUrl(key: string, contentType: string) {

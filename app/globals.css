@@ -128,3 +128,128 @@
     @apply font-sans;
   }
 }
+
+/* ─── AGNT.SR Landing Page Styles ─── */
+
+.mono {
+  font-family: 'JetBrains Mono', var(--font-geist-mono), monospace;
+}
+
+.dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bento-card {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
+  position: relative;
+  overflow: hidden;
+}
+.bento-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.bento-card:hover::before { opacity: 1; }
+.bento-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.glow-code {
+  position: relative;
+  background: radial-gradient(circle at center, rgba(100, 200, 255, 0.1) 0%, transparent 60%);
+  border-radius: 8px;
+  padding: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.subpixel-border { border: 1px solid rgba(255, 255, 255, 0.08); }
+
+.json-key { color: #9cdcfe; }
+.json-string { color: #ce9178; }
+.json-num { color: #b5cea8; }
+.json-bool { color: #569cd6; }
+.json-dim { opacity: 0.3; filter: grayscale(1); transition: all 0.4s ease; }
+.json-active { opacity: 1; filter: none; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-reveal { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+@keyframes checkmark {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.copy-success { animation: checkmark 0.6s ease; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.qs-tab { color: #71717a; }
+.qs-tab.active { background: rgba(255, 255, 255, 0.08); color: #fafafa; }
+
+.filter-chip { white-space: nowrap; }
+.filter-chip.active {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.token-toggle { color: #71717a; }
+.token-toggle.active { background: rgba(255, 255, 255, 0.1); color: #fafafa; }
+
+.provenance-badge {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.15);
+}
+.provenance-badge.expired {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.15);
+}
+
+/* Marquee */
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+.marquee-track { animation: marquee-scroll 32s linear infinite; }
+.marquee-mask:hover .marquee-track { animation-play-state: paused; }
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.logo-chip { color: #52525b; filter: grayscale(1); opacity: 0.6; transition: all 0.4s ease; }
+.logo-chip:hover { color: #fafafa; opacity: 1; filter: grayscale(0.2); text-shadow: 0 0 20px rgba(255, 255, 255, 0.25); }
+
+/* Toast */
+.toast-container {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 100; pointer-events: none; opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.toast-container.toast-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(15, 15, 17, 0.92);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255,255,255,0.02);
+  backdrop-filter: blur(12px);
+  padding: 10px 16px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; color: #ecfdf5;
+}
